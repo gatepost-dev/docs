@@ -68,6 +68,21 @@ describe('describePostcode', () => {
     expect(describePostcode('  ', false)).toMatchObject({ status: 'idle', forms: [] });
   });
 
+  it.each([
+    ['900108', false, 'error.legacy_code'],
+    ['EK-01-A03-FK-0!', false, 'error.bad_character'],
+    ['EK0', false, 'error.bad_length'],
+    ['EK0', true, 'error.bad_length.partial'],
+    ['ZZ-01-A03-FK-01', false, 'error.unknown_state'],
+    ['EK-00-A03-FK-01', false, 'error.bad_segment.lga'],
+    ['EK-01-A03-1K-01', false, 'error.bad_segment.area'],
+    ['EK-01-A03-FK-00', false, 'error.bad_segment.unit'],
+  ] as const)('picks the message of the error for %s', (input, allowPartial, key) => {
+    const result = parse(input, { allowPartial });
+    if (result.ok) throw new Error(`${input} parses.`);
+    expect(errorMessageKey(result.error, allowPartial)).toBe(key);
+  });
+
   it.each(VECTORS)('has a message for the parse vector $input', ({ input, options }) => {
     const result = parse(input, options);
     if (!result.ok) {
@@ -85,5 +100,10 @@ describe('describeAccuracy', () => {
       'A fix this rough can show the postcode up to the LGA.',
       null,
     ]);
+  });
+
+  it('says that a negative or invalid number is not an accuracy', () => {
+    const invalid = 'An accuracy is a number of metres, zero or more.';
+    expect(['-5', 'abc', 'Infinity'].map(describeAccuracy)).toEqual([invalid, invalid, invalid]);
   });
 });

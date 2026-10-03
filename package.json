@@ -22,7 +22,7 @@
     "format:check": "prettier --check .",
     "lint": "eslint . --max-warnings 0",
     "typecheck": "ASTRO_TELEMETRY_DISABLED=1 astro check",
-    "test": "vitest run --project unit",
+    "test": "vitest run --project unit --coverage",
     "test:site": "vitest run --project site",
     "tells": "python3 spec/scripts/check-tells",
     "prose": "node scripts/check-prose.ts",
@@ -58,6 +58,7 @@
     "prettier-plugin-astro": "^1.1.0",
     "typescript": "6.0.3",
     "typescript-eslint": "^8.71.0",
+    "@vitest/coverage-v8": "^5.0.3",
     "vitest": "^5.0.3",
     "yaml": "^2.9.1"
   }

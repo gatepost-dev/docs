@@ -128,11 +128,14 @@ export function describePostcode(input: string, allowPartial: boolean): Postcode
  * Describes what a GPS fix of a given accuracy can show.
  *
  * @param text - The accuracy in metres, as the reader typed it. Empty text gives null.
- * @returns The message, or null when the field is empty.
+ * @returns The message, or null when the field is empty. A negative or invalid number gives the
+ *   message for an invalid accuracy.
  */
 export function describeAccuracy(text: string): string | null {
   if (text.trim() === '') return null;
-  const key = `accuracy.${precisionForAccuracy(Number(text))}`;
+  const metres = Number(text);
+  if (!Number.isFinite(metres) || metres < 0) return message('accuracy.invalid');
+  const key = `accuracy.${precisionForAccuracy(metres)}`;
   if (!isMessageKey(key)) throw new Error(`The catalogue has no message ${key}.`);
   return message(key);
 }

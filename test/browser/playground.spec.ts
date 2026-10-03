@@ -70,3 +70,27 @@ test('has no WCAG 2.2 AA violation while it shows a suggestion', async ({ page }
     .analyze();
   expect(results.violations.map(({ id }) => id)).toEqual([]);
 });
+
+test('announces the result after the typing pauses, not at each keystroke', async ({ page }) => {
+  const status = page.getByRole('status').first();
+  const idle = await status.textContent();
+  await page.getByLabel('Postcode', { exact: true }).fill('EK-01-A03-FK-01');
+  await expect(status).toHaveText(idle ?? '');
+  await expect(status).toHaveText(/form of a postcode/);
+});
+
+test('fits a screen 320 pixels wide while it shows a suggestion and a long value', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+  await page.getByLabel('Postcode', { exact: true }).fill('EK-O1-A03-FK-01');
+  await expect(page.getByRole('button', { name: 'Use the suggestion' })).toBeVisible();
+  const results = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+    .analyze();
+  expect(results.violations.map(({ id }) => id)).toEqual([]);
+  await page.getByLabel('Postcode', { exact: true }).fill('ek 01 a03 fk 01');
+  await expect(page.getByRole('definition').first()).toBeVisible();
+  const width = await page.evaluate(() => document.documentElement.scrollWidth);
+  expect(width).toBeLessThanOrEqual(320);
+});

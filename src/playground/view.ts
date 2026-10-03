@@ -67,6 +67,7 @@ export function startPlayground(root: HTMLElement): void {
   const accuracy = inputPart(root, 'accuracy');
   const accuracyStatus = part(root, 'accuracy-status');
   let timer: ReturnType<typeof setTimeout> | undefined;
+  let accuracyTimer: ReturnType<typeof setTimeout> | undefined;
 
   const render = (): void => {
     const view = describePostcode(input.value, partial.checked);
@@ -89,7 +90,11 @@ export function startPlayground(root: HTMLElement): void {
     input.focus();
   });
   accuracy.addEventListener('input', () => {
-    accuracyStatus.textContent = describeAccuracy(accuracy.value) ?? '';
+    const text = describeAccuracy(accuracy.value) ?? '';
+    clearTimeout(accuracyTimer);
+    accuracyTimer = setTimeout(() => {
+      accuracyStatus.textContent = text;
+    }, STATUS_DELAY_MS);
   });
   render();
 }
