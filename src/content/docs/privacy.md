@@ -23,3 +23,7 @@ The playground runs in your browser. It sends what you type to no server, and it
 ## Hosting
 
 GitHub hosts this site on GitHub Pages. [GitHub logs the IP address of each visitor](https://docs.github.com/en/pages/getting-started-with-github-pages/about-github-pages#data-collection) for security. The Gatepost team does not see these logs.
+
+## Fonts
+
+The site sets its text in Overpass, a font under the [SIL Open Font License 1.1](https://openfontlicense.org). The font files come from this site, not from another site.

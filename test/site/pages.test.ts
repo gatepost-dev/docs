@@ -30,6 +30,28 @@ describe('every built page', () => {
   });
 });
 
+describe('the preview of a shared link', () => {
+  it.each(PAGES)('names an image of the site in $path', ({ text }) => {
+    expect(text).toContain(
+      '<meta property="og:image" content="https://gatepost-dev.github.io/docs/og-image.png"',
+    );
+    expect(text).toContain(
+      '<meta name="twitter:image" content="https://gatepost-dev.github.io/docs/og-image.png"',
+    );
+  });
+
+  it('keeps the 404 page out of search results', () => {
+    const page = PAGES.find(({ path }) => path === '404.html');
+    expect(page?.text).toContain('<meta name="robots" content="noindex"');
+  });
+
+  it('gives the home page a title that does not repeat the site name', () => {
+    const page = PAGES.find(({ path }) => path === 'index.html');
+    expect(page?.text).toMatch(/<title>[^<|]*\| Gatepost<\/title>/);
+    expect(page?.text).not.toContain('<title>Gatepost | Gatepost</title>');
+  });
+});
+
 describe('every built style sheet', () => {
   it.each(STYLES)('loads nothing from another site in $path', ({ text }) => {
     expect(foreignCssUrls(text)).toEqual([]);

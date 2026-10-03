@@ -39,7 +39,9 @@ export default defineConfig({
     {
       name: 'gatepost-generated-pages',
       hooks: {
-        'astro:config:setup': async () => {
+        'astro:config:setup': async ({ command }) => {
+          // The preview serves the built site and reads none of the generated files.
+          if (command === 'preview') return;
           writeSpecPages(import.meta.dirname);
           await writeClientSamples(import.meta.dirname);
           try {
@@ -76,6 +78,9 @@ export default defineConfig({
           tag: 'link',
           attrs: { rel: 'apple-touch-icon', href: `${base}/apple-touch-icon-180.png` },
         },
+        // A shared link shows this card. The address is absolute, because a card reader needs it.
+        { tag: 'meta', attrs: { property: 'og:image', content: `${site}${base}/og-image.png` } },
+        { tag: 'meta', attrs: { name: 'twitter:image', content: `${site}${base}/og-image.png` } },
       ],
       locales: { root: { label: 'English', lang: 'en-GB' } },
       social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/gatepost-dev' }],
