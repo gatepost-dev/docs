@@ -8,6 +8,9 @@
     "node": ">=24.15.0"
   },
   "scripts": {
+    "sdk": "run-s sdk:js sdk:js:build",
+    "sdk:js": "pnpm --dir js install --frozen-lockfile",
+    "sdk:js:build": "pnpm --dir js --filter @gatepost/core --filter @gatepost/client run build",
     "dev": "ASTRO_TELEMETRY_DISABLED=1 astro dev",
     "build": "ASTRO_TELEMETRY_DISABLED=1 astro build",
     "preview": "ASTRO_TELEMETRY_DISABLED=1 astro preview",
@@ -32,7 +35,12 @@
   "dependencies": {
     "@astrojs/starlight": "^0.42.5",
     "@fontsource/overpass": "^5.3.0",
-    "astro": "^7.3.5"
+    "@gatepost/client": "link:js/packages/client",
+    "@gatepost/core": "link:js/packages/core",
+    "astro": "^7.3.5",
+    "starlight-typedoc": "^0.23.1",
+    "typedoc": "^0.28.20",
+    "typedoc-plugin-markdown": "^4.13.1"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",

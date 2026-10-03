@@ -2,11 +2,31 @@
 // SPDX-License-Identifier: Apache-2.0
 import starlight from '@astrojs/starlight';
 import { defineConfig } from 'astro/config';
+import { createStarlightTypeDocPlugin } from 'starlight-typedoc';
 
 // GitHub Pages serves the org's project site under the repo name. A custom domain changes the
 // site and sets the base to '/'.
 const site = 'https://gatepost-dev.github.io';
 const base = '/docs';
+
+const [coreTypeDoc, coreTypeDocGroup] = createStarlightTypeDocPlugin();
+const [clientTypeDoc, clientTypeDocGroup] = createStarlightTypeDocPlugin();
+
+// The API pages of a package, generated from the TSDoc comments of its source.
+function typeDocOf(name) {
+  return {
+    entryPoints: [`js/packages/${name}/src/index.ts`],
+    tsconfig: `js/packages/${name}/tsconfig.json`,
+    output: `reference/js/${name}`,
+    sidebar: { label: `@gatepost/${name}`, collapsed: true },
+    typeDoc: {
+      excludeInternal: true,
+      readme: 'none',
+      disableSources: true,
+      entryFileName: 'index',
+    },
+  };
+}
 
 export default defineConfig({
   site,
@@ -43,7 +63,11 @@ export default defineConfig({
       // A code block that scrolls sideways needs a focus stop for keyboard users. Wrapped lines
       // need none, and they fit a phone screen.
       expressiveCode: { defaultProps: { wrap: true } },
-      sidebar: [{ label: 'Project', items: ['privacy'] }],
+      plugins: [coreTypeDoc(typeDocOf('core')), clientTypeDoc(typeDocOf('client'))],
+      sidebar: [
+        { label: 'API reference', items: [coreTypeDocGroup, clientTypeDocGroup] },
+        { label: 'Project', items: ['privacy'] },
+      ],
     }),
   ],
 });

@@ -33,6 +33,7 @@ jobs:
           enable-cache: false
       - run: corepack enable
       - run: pnpm install --frozen-lockfile
+      - run: pnpm sdk
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm check
       - if: always()
