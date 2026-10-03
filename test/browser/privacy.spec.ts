@@ -28,17 +28,23 @@ test('a search sends the text nowhere and keeps no cookie', async ({ page, baseU
   expect(await page.context().cookies()).toEqual([]);
 });
 
-test('the browser keeps only the keys that the privacy page names', async ({ page }) => {
-  await page.goto('/docs/privacy/');
-  await page.getByRole('combobox', { name: 'Select theme' }).first().selectOption('light');
-  await page.goto('/docs/');
-  const stored = await page.evaluate(() => ({
-    local: Object.keys(localStorage),
-    session: Object.keys(sessionStorage),
-  }));
-  expect(stored.local).toContain('starlight-theme');
-  expect(stored.local.every((key) => LOCAL_KEYS.includes(key))).toBe(true);
-  expect(stored.session.every((key) => SESSION_KEYS.includes(key))).toBe(true);
+// Every page, the 404 page included, because a script on any one of them could store a key.
+for (const path of [...sitePaths(), '/docs/no-such-page/']) {
+  test(`${path} keeps only the keys that the privacy page names`, async ({ page }) => {
+    await page.goto('/docs/privacy/');
+    await page.getByRole('combobox', { name: 'Select theme' }).first().selectOption('light');
+    await page.goto(path);
+    const stored = await page.evaluate(() => ({
+      local: Object.keys(localStorage),
+      session: Object.keys(sessionStorage),
+    }));
+    expect(stored.local).toContain('starlight-theme');
+    expect(stored.local.filter((key) => !LOCAL_KEYS.includes(key))).toEqual([]);
+    expect(stored.session.filter((key) => !SESSION_KEYS.includes(key))).toEqual([]);
+  });
+}
+
+test('the privacy page names each key', async ({ page }) => {
   await page.goto('/docs/privacy/');
   for (const key of [...LOCAL_KEYS, ...SESSION_KEYS]) {
     await expect(page.getByRole('main')).toContainText(key);
