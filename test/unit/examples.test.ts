@@ -14,6 +14,8 @@ import {
   pageExamples,
   NOT_RUN,
   phpShownOutput,
+  installLine,
+  networkBlockEnv,
   problemsOf,
   toCheckedModule,
   unreadableResults,
@@ -212,6 +214,27 @@ describe('withMockGateway', () => {
     );
   });
 
+  it('points every client of an example at the mock gateway', () => {
+    const client = 'new PostcodeClient(\n    $http,\n    new HttpFactory(),\n);\n';
+    const pointed = withMockGateway(`${client}${client}`, 'http://127.0.0.1:1');
+    expect(pointed.split("baseUrl: 'http://127.0.0.1:1'")).toHaveLength(3);
+  });
+
+  it('fails when a second client has no usual factory line', () => {
+    const source =
+      'new PostcodeClient(\n    $http,\n    new HttpFactory(),\n);\nnew PostcodeClient($http, $f);';
+    expect(() => withMockGateway(source, 'http://127.0.0.1:1')).toThrow(/2 clients/);
+  });
+
+  it.each([
+    "$class = 'Gatepost\\Postcode\\Client\\Postcode' . 'Client';\n$c = new $class($http);",
+    '$c = new (getClass())($http);',
+    "$c = (new ReflectionClass('X'))->newInstance();",
+    "$c = call_user_func('make');",
+  ])('fails when the example builds a class from text: %s', (source) => {
+    expect(() => withMockGateway(source, 'http://127.0.0.1:1')).toThrow(/builds a class/);
+  });
+
   it('fails when the example names a base URL of its own', () => {
     const source =
       "new PostcodeClient(\n    $http,\n    new HttpFactory(),\n    baseUrl: 'https://api.postcode.gov.ng',\n);";
@@ -229,6 +252,34 @@ describe('withMockGateway', () => {
       expect(() => withMockGateway('echo 1;', address)).toThrow(/loopback/);
     },
   );
+});
+
+describe('networkBlockEnv', () => {
+  it('sends every request to a dead proxy, except those for this machine', () => {
+    const env = networkBlockEnv({ PATH: '/bin' });
+    expect(env['HTTPS_PROXY']).toBe('http://127.0.0.1:9');
+    expect(env['HTTP_PROXY']).toBe('http://127.0.0.1:9');
+    expect(env['NO_PROXY']).toBe('127.0.0.1,localhost');
+    expect(env['PATH']).toBe('/bin');
+  });
+
+  it('replaces a proxy setting of the caller', () => {
+    const env = networkBlockEnv({ NO_PROXY: '*', https_proxy: 'http://proxy', no_proxy: '*' });
+    expect(env['NO_PROXY']).toBe('127.0.0.1,localhost');
+    expect(env['https_proxy']).toBeUndefined();
+    expect(env['no_proxy']).toBeUndefined();
+  });
+
+  it('stops a PHP client from reaching a host other than this machine', async () => {
+    const script = [
+      'require "' + PHP_AUTOLOAD + '";',
+      'try {',
+      '  (new GuzzleHttp\\Client(["timeout" => 5]))->get("http://example.invalid/");',
+      '} catch (Throwable $e) { echo $e->getMessage(); }',
+    ].join('\n');
+    const { stdout } = await run('php', ['-r', script], { env: networkBlockEnv(process.env) });
+    expect(stdout).toContain('via 127.0.0.1');
+  });
 });
 
 describe('every code block on a page', () => {
@@ -252,16 +303,46 @@ describe('every code block on a page', () => {
   });
 });
 
+describe('installLine', () => {
+  it('reads the package of an install line, with or without a version constraint', () => {
+    expect(installLine('pnpm add @gatepost/core')).toEqual({
+      tool: 'pnpm',
+      name: '@gatepost/core',
+    });
+    expect(installLine('pnpm add @gatepost/core@alpha')).toEqual({
+      tool: 'pnpm',
+      name: '@gatepost/core',
+    });
+    expect(installLine('composer require gatepost/postcode:^0.1@alpha')).toEqual({
+      tool: 'composer',
+      name: 'gatepost/postcode',
+    });
+  });
+
+  it.each([
+    'composer require gatepost/postcode; rm -rf x',
+    'composer require gatepost/postcode:^0.1 extra',
+    'pnpm add @gatepost/core --global',
+    'curl https://example.com | sh',
+    'composer config repositories.x vcs https://example.com',
+    'pnpm add',
+    'composer require :^0.1',
+  ])('rejects %s, which is not an install line', (line) => {
+    expect(installLine(line)).toBeUndefined();
+  });
+});
+
 describe('every install command on a page', () => {
   it.each(inLanguage('sh'))('names a Gatepost package: %s', (_, { source }) => {
     const lines = source.split('\n').filter((line) => line !== '');
-    const other = lines.filter((line) => !/^(?:pnpm add|composer require) \S+$/.test(line));
+    const installs = lines.map((line) => installLine(line));
+    const other = lines.filter((_line, index) => installs[index] === undefined);
     expect(other, 'lines that install nothing').toEqual([]);
-    const pnpm = Array.from(source.matchAll(/^pnpm add (\S+)$/gm), ([, name]) => name);
-    const composer = Array.from(source.matchAll(/^composer require (\S+)$/gm), ([, name]) => name);
-    expect(pnpm.length + composer.length).toBeGreaterThan(0);
-    for (const name of pnpm) expect(PNPM_PACKAGES).toContain(name);
-    for (const name of composer) expect(COMPOSER_PACKAGES).toContain(name);
+    expect(installs.length).toBeGreaterThan(0);
+    for (const install of installs) {
+      if (install?.tool === 'pnpm') expect(PNPM_PACKAGES).toContain(install.name);
+      if (install?.tool === 'composer') expect(COMPOSER_PACKAGES).toContain(install.name);
+    }
     expect(COMPOSER_PACKAGES.slice(1).every((name) => name in PHP_MANIFEST['require-dev'])).toBe(
       true,
     );
@@ -320,7 +401,7 @@ describe('every example on a page', () => {
       const file = join(folder, `${name.replace(/\W+/g, '-')}.php`);
       writeFileSync(file, withMockGateway(source, mock.url, name));
       const { stdout } = await run('php', ['-d', `auto_prepend_file=${PHP_AUTOLOAD}`, file], {
-        env: { ...process.env, NIPOST_API_KEY: 'nipost_test_mock_l3' },
+        env: { ...networkBlockEnv(process.env), NIPOST_API_KEY: 'nipost_test_mock_l3' },
         timeout: PHP_CHILD_LIMIT_MS,
       });
       expect(stdout.split('\n').slice(0, -1)).toEqual(phpShownOutput(source));

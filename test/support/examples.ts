@@ -158,6 +158,33 @@ export function unreadablePhpResults(source: string): readonly string[] {
     .filter((line) => TRAILING_COMMENT.test(line) && !/^\s*echo .+; \/\/ .+$/.test(line));
 }
 
+// A package name, then an optional version constraint such as `:^0.1@alpha` or `@alpha`.
+const INSTALL_LINE = new RegExp(
+  '^(?<tool>pnpm add|composer require) ' +
+    '(?<name>@?[\\w.-]+(?:/[\\w.-]+)?)' +
+    '(?:[:@](?<constraint>[\\w.^~*<>=|@-]+))?$',
+);
+
+/**
+ * Reads a line of an install block. Only a line that installs one package counts, with or
+ * without a version constraint. Any other text, such as a second argument or a pipe, does not.
+ *
+ * @param line - The line.
+ * @returns The tool and the name of the package, or undefined when the line is not an install.
+ */
+export function installLine(
+  line: string,
+): { readonly tool: 'pnpm' | 'composer'; readonly name: string } | undefined {
+  const groups = INSTALL_LINE.exec(line)?.groups;
+  if (groups === undefined) return undefined;
+  return { tool: groups['tool'] === 'pnpm add' ? 'pnpm' : 'composer', name: groups['name'] ?? '' };
+}
+
+// The ways that PHP makes an object of a class that its text does not name.
+const DYNAMIC_CLASS =
+  /\bnew\s+(?:\$|\(|static\b)|\bReflectionClass\b|\bcall_user_func|\bclass_alias\b/;
+const CLIENT_CONSTRUCTION = /\bnew\s+\\?(?:\w+\\)*PostcodeClient\b/g;
+
 const FACTORY_LINE = '    new HttpFactory(),\n';
 const LOOPBACK_HOSTS = ['127.0.0.1', 'localhost', '[::1]'];
 
@@ -167,6 +194,49 @@ function isLoopback(address: string): boolean {
   } catch {
     return false;
   }
+}
+
+const PROXY_NAMES = ['http_proxy', 'https_proxy', 'all_proxy', 'no_proxy'];
+
+/**
+ * Builds the environment of a child process that must not reach the network. Every proxy-aware
+ * client sends its requests to a dead local proxy, except those for this machine. This works
+ * below the text checks, so an example that escapes them still reaches no other host.
+ *
+ * @param env - The environment to start from.
+ * @returns A copy with the proxy settings replaced.
+ */
+export function networkBlockEnv(
+  env: Readonly<Record<string, string | undefined>>,
+): Record<string, string | undefined> {
+  const kept = Object.fromEntries(
+    Object.entries(env).filter(([key]) => !PROXY_NAMES.includes(key.toLowerCase())),
+  );
+  return {
+    ...kept,
+    HTTP_PROXY: 'http://127.0.0.1:9',
+    HTTPS_PROXY: 'http://127.0.0.1:9',
+    NO_PROXY: '127.0.0.1,localhost',
+  };
+}
+
+// Adds the base URL after the request factory of each client. It fails unless every client has
+// such a line, because a client that the edit misses would call the real gateway.
+function pointClients(source: string, baseUrl: string, name: string): string {
+  // Any mention of the client class counts, also its full name, so that no form skips the edit.
+  if (!source.includes('PostcodeClient')) return source;
+  if (/\bbaseUrl\s*:/.test(source)) {
+    throw new Error(`${name} names a base URL of its own. The test sets the base URL.`);
+  }
+  const clients = Array.from(source.matchAll(CLIENT_CONSTRUCTION)).length;
+  const factories = source.split(FACTORY_LINE).length - 1;
+  if (factories === 0 || factories !== clients) {
+    throw new Error(
+      `The test cannot point ${name} at the mock gateway: ${String(clients)} clients and ` +
+        `${String(factories)} lines "${FACTORY_LINE.trim()}".`,
+    );
+  }
+  return source.replaceAll(FACTORY_LINE, `${FACTORY_LINE}    baseUrl: '${baseUrl}',\n`);
 }
 
 /**
@@ -184,19 +254,11 @@ export function withMockGateway(source: string, baseUrl: string, name = 'the exa
   if (!isLoopback(baseUrl)) {
     throw new Error(`The mock gateway address ${baseUrl} is not a loopback address.`);
   }
-  let pointed = source;
-  // Any mention of the client class counts, also its full name, so that no form skips the edit.
-  if (source.includes('PostcodeClient')) {
-    if (/\bbaseUrl\s*:/.test(source)) {
-      throw new Error(`${name} names a base URL of its own. The test sets the base URL.`);
-    }
-    if (!source.includes(FACTORY_LINE)) {
-      throw new Error(
-        `The test cannot point ${name} at the mock gateway: no line "${FACTORY_LINE.trim()}".`,
-      );
-    }
-    pointed = source.replace(FACTORY_LINE, `${FACTORY_LINE}    baseUrl: '${baseUrl}',\n`);
+  // A class built from text hides the client from every check below, so no such example runs.
+  if (DYNAMIC_CLASS.test(source)) {
+    throw new Error(`${name} builds a class from text, so the test cannot see its clients.`);
   }
+  const pointed = pointClients(source, baseUrl, name);
   for (const [address] of pointed.matchAll(/https?:\/\/[^\s'"`)]+/g)) {
     if (!isLoopback(address)) {
       throw new Error(`${name} holds the address ${address}, which is not a loopback address.`);
