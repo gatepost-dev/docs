@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { SPEC_VERSION as CLIENT_SPEC_VERSION } from '@gatepost/client';
 import { SPEC_VERSION as CORE_SPEC_VERSION } from '@gatepost/core';
 import { describe, expect, it } from 'vitest';
-import { specPages } from '../../scripts/spec-pages.ts';
+import { specPages, wrapTables } from '../../scripts/spec-pages.ts';
 
 const SPEC_VERSION = readFileSync('spec/VERSION', 'utf8').trim();
 const PAGES = specPages('spec', 'abc123');
@@ -25,6 +25,49 @@ describe('specPages', () => {
     expect(PAGES[1]?.text).toContain(
       `[\`client.md\`](https://github.com/gatepost-dev/spec/blob/abc123/client.md) from spec ${SPEC_VERSION}.`,
     );
+  });
+});
+
+describe('wrapTables', () => {
+  it('puts each table in a labelled box with a focus stop, named after the heading above', () => {
+    const text = '## Errors\n\nIntro.\n\n| a | b |\n| - | - |\n| 1 | 2 |\n\nAfter.\n';
+    expect(wrapTables(text)).toBe(
+      [
+        '## Errors',
+        '',
+        'Intro.',
+        '',
+        '<div class="table-scroll" role="region" tabindex="0" aria-label="Table: Errors">',
+        '',
+        '| a | b |',
+        '| - | - |',
+        '| 1 | 2 |',
+        '',
+        '</div>',
+        '',
+        'After.',
+        '',
+      ].join('\n'),
+    );
+  });
+
+  it('labels a table that has no heading above it, and keeps text without a table', () => {
+    expect(wrapTables('| a |\n| - |\n')).toContain('aria-label="Table"');
+    expect(wrapTables('Plain text.\n')).toBe('Plain text.\n');
+  });
+
+  it('wraps every table of the spec pages that the site builds', () => {
+    for (const { text } of PAGES) {
+      expect(text.match(/^\|/gm)?.length ?? 0).toBe(
+        text.split('\n').filter((line) => line.startsWith('|')).length,
+      );
+      expect(text.split('<div class="table-scroll"').length).toBe(
+        text
+          .split('\n')
+          .filter((line, i, all) => line.startsWith('|') && !all[i - 1]?.startsWith('|')).length +
+          1,
+      );
+    }
   });
 });
 

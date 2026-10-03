@@ -31,3 +31,16 @@ test('a page fits a screen 320 pixels wide with no sideways scroll', async ({ pa
     expect(width, path).toBeLessThanOrEqual(320);
   }
 });
+
+// A wide table scrolls inside its own box on a narrow screen. The box needs a focus stop, or a
+// keyboard user cannot scroll it (WCAG 2.1.1). The desktop run above never sees this.
+for (const path of [...sitePaths(), '/docs/404.html']) {
+  test(`${path} has no violation that axe finds at 320 pixels`, async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 640 });
+    await page.goto(path);
+    const results = await new AxeBuilder({ page }).withTags(WCAG_22_AA).analyze();
+    expect(
+      results.violations.map(({ id, nodes }) => `${id}: ${nodes[0]?.target.join(' ') ?? ''}`),
+    ).toEqual([]);
+  });
+}

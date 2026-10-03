@@ -34,6 +34,34 @@ const SOURCES = [
 ] as const;
 
 /**
+ * Puts each Markdown table in a box that scrolls and takes the keyboard focus. A wide table
+ * scrolls sideways on a narrow screen, and a keyboard user cannot reach it without a focus stop
+ * (WCAG 2.1.1). The label of the box names the heading above the table.
+ *
+ * @param markdown - The Markdown of a page. It must hold no code fence with a table in it.
+ * @returns The Markdown with each table inside an HTML box.
+ */
+export function wrapTables(markdown: string): string {
+  const out: string[] = [];
+  let heading = '';
+  let inTable = false;
+  for (const line of markdown.split('\n')) {
+    const isRow = line.startsWith('|');
+    if (isRow && !inTable) {
+      const label = heading === '' ? 'Table' : `Table: ${heading}`;
+      const box = `<div class="table-scroll" role="region" tabindex="0" aria-label="${label}">`;
+      out.push(box, '');
+    } else if (!isRow && inTable) {
+      out.push('', '</div>');
+    }
+    inTable = isRow;
+    heading = /^#{1,6} /.test(line) ? line.replace(/^#+ /, '').trim() : heading;
+    out.push(line);
+  }
+  return out.join('\n');
+}
+
+/**
  * Builds the spec pages from the files of a spec folder.
  *
  * @param specDir - The spec folder, such as the `spec` submodule.
@@ -56,7 +84,7 @@ export function specPages(specDir: string, commit: string): readonly SpecPage[] 
       '---',
     ].join('\n');
     const note = `:::note\nThis page shows [\`${file}\`](${url}) from spec ${version}.\n:::`;
-    return { slug, text: `${frontMatter}\n\n${note}\n\n${body}` };
+    return { slug, text: `${frontMatter}\n\n${note}\n\n${wrapTables(body)}` };
   });
 }
 
