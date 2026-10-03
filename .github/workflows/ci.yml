@@ -31,6 +31,12 @@ jobs:
         with:
           # pnpm check starts reuse and zizmor with uvx. No lock file keys a cache.
           enable-cache: false
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          # The newest PHP. The PHP package supports 8.1 and later, and its own CI tests 8.1.
+          php-version: '8.4'
+          tools: composer
+          coverage: none
       - run: corepack enable
       - run: pnpm install --frozen-lockfile
       - run: pnpm sdk

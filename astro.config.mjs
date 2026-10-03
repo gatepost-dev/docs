@@ -1,5 +1,6 @@
 // SPDX-FileCopyrightText: 2026 The Gatepost authors
 // SPDX-License-Identifier: Apache-2.0
+import { execFileSync } from 'node:child_process';
 import starlight from '@astrojs/starlight';
 import { defineConfig } from 'astro/config';
 import { createStarlightTypeDocPlugin } from 'starlight-typedoc';
@@ -41,6 +42,11 @@ export default defineConfig({
         'astro:config:setup': async () => {
           writeSpecPages(import.meta.dirname);
           await writeClientSamples(import.meta.dirname);
+          execFileSync(
+            'php',
+            ['scripts/php-reference.php', 'php', 'src/content/docs/reference/php'],
+            { cwd: import.meta.dirname },
+          );
         },
       },
     },
@@ -79,7 +85,18 @@ export default defineConfig({
         { label: 'Start', items: ['start', 'playground'] },
         { label: 'Guides', items: [{ autogenerate: { directory: 'guides' } }] },
         { label: 'Spec', items: [{ autogenerate: { directory: 'spec' } }] },
-        { label: 'API reference', items: [coreTypeDocGroup, clientTypeDocGroup] },
+        {
+          label: 'API reference',
+          items: [
+            coreTypeDocGroup,
+            clientTypeDocGroup,
+            {
+              label: 'gatepost/postcode',
+              collapsed: true,
+              items: [{ autogenerate: { directory: 'reference/php' } }],
+            },
+          ],
+        },
         { label: 'Project', items: ['privacy'] },
       ],
     }),

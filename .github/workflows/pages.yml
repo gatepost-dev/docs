@@ -27,6 +27,12 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          # The newest PHP. The PHP package supports 8.1 and later, and its own CI tests 8.1.
+          php-version: '8.4'
+          tools: composer
+          coverage: none
       - run: corepack enable
       - run: pnpm install --frozen-lockfile
       - run: pnpm sdk

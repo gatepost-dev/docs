@@ -76,3 +76,31 @@ export function toCheckedModule(source: string, modules: Readonly<Record<string,
     imported.replace(RESULT_LINE, '$1shown($2, $3);'),
   ].join('\n');
 }
+
+// A PHP line such as `echo $code->canonical, "\n"; // EK-01-A03-FK-01` shows the line that it
+// prints. The test compares the whole output of the example with these lines, in order.
+const PHP_SHOWN_LINE = /^\s*echo .+; \/\/ (.+)$/gm;
+
+/**
+ * Lists the output lines that a PHP example shows in its comments.
+ *
+ * @param source - The code of the example.
+ * @returns The lines, in order.
+ */
+export function phpShownOutput(source: string): readonly string[] {
+  return Array.from(source.matchAll(PHP_SHOWN_LINE), ([, line]) => line ?? '');
+}
+
+const FACTORY_LINE = '    new HttpFactory(),\n';
+
+/**
+ * Points the client of a PHP example at the mock gateway. The page shows the client with
+ * NIPOST's address, so the test adds one named argument after the request factory.
+ *
+ * @param source - The code of the example.
+ * @param baseUrl - The address of the mock gateway.
+ * @returns The code that the test runs.
+ */
+export function withMockGateway(source: string, baseUrl: string): string {
+  return source.replace(FACTORY_LINE, `${FACTORY_LINE}    baseUrl: '${baseUrl}',\n`);
+}
