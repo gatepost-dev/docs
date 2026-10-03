@@ -10,9 +10,13 @@ sidebar:
 
 ## Install
 
+The first alpha is not published yet. This page will say when it is.
+
 ```sh
-composer require gatepost/postcode
+composer require gatepost/postcode:^0.1@alpha
 ```
+
+Composer installs only stable releases unless the constraint allows an alpha.
 
 ## Read a postcode
 

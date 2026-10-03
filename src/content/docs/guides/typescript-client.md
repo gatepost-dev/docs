@@ -10,6 +10,8 @@ sidebar:
 
 ## Install
 
+The first alpha is not published yet. This page will say when it is.
+
 ```sh
 pnpm add @gatepost/client
 ```
