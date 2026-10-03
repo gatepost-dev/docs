@@ -32,6 +32,21 @@ describe('linksToSkip', () => {
       expect(skipped(url, true), url).toBe(true);
     }
   });
+
+  it('checks only the docs host of NIPOST and skips every other host of postcode.gov.ng', () => {
+    expect(skipped('https://docs.postcode.gov.ng/', true)).toBe(false);
+    expect(skipped('https://docs.postcode.gov.ng/guides/keys/#top', true)).toBe(false);
+    for (const url of [
+      'https://dashboard.postcode.gov.ng/register',
+      'https://postcode.gov.ng/',
+      'https://www.postcode.gov.ng/about',
+      'https://new-host.postcode.gov.ng:8443/x',
+      'http://status.postcode.gov.ng',
+    ]) {
+      expect(skipped(url, true), url).toBe(true);
+    }
+    expect(skipped('https://notpostcode.gov.ng.example.com/', true)).toBe(false);
+  });
 });
 
 describe('brokenLinks', () => {

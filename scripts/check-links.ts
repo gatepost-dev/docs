@@ -15,12 +15,11 @@ const LOCAL = 'http://127\\.0\\.0\\.1:\\d+';
 // A crawl that finds fewer links than this has missed the site.
 const MINIMUM_LINKS = 100;
 
-// The gateway and NIPOST's platform: Gatepost calls neither from a link checker.
-const NEVER = [
-  '^https?://api\\.postcode\\.gov\\.ng',
-  '^https?://platform\\.postcode\\.gov\\.ng',
-  '^https?://(?:www\\.)?postcode\\.gov\\.ng/api(?:[/?#]|$)',
-];
+// Every host of postcode.gov.ng except the public docs host: the gateway, the platform, the
+// dashboard and the API paths of the website. A new NIPOST host is skipped by default.
+const NIPOST = '(?:[^/?#]*\\.)?postcode\\.gov\\.ng(?:[:/?#]|$)';
+const DOCS_HOST = 'docs\\.postcode\\.gov\\.ng(?:[:/?#]|$)';
+const NEVER = [`^https?://(?!${DOCS_HOST})${NIPOST}`];
 
 // The absolute links of the site to itself, such as the canonical link of a page. They name the
 // published site, which lags the build, so the relative links stand for them.
