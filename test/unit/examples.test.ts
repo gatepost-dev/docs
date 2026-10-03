@@ -28,6 +28,7 @@ const MODULES = {
 // The mock gateway runs in this process, so PHP must run without blocking it.
 const run = promisify(execFile);
 const ROOT = fileURLToPath(new URL('../../', import.meta.url));
+const PHP_CHILD_LIMIT_MS = 60_000;
 const PHP_AUTOLOAD = join(ROOT, 'php/vendor/autoload.php');
 
 function readJson(path: string): unknown {
@@ -196,6 +197,21 @@ describe('withMockGateway', () => {
     expect(() => withMockGateway(source, 'http://127.0.0.1:1')).toThrow(/cannot point/);
   });
 
+  it('points an example that writes the full class name at the mock gateway', () => {
+    const source =
+      'new \\Gatepost\\Postcode\\Client\\PostcodeClient(\n    $http,\n    new HttpFactory(),\n);';
+    expect(withMockGateway(source, 'http://127.0.0.1:1')).toContain(
+      "baseUrl: 'http://127.0.0.1:1'",
+    );
+  });
+
+  it('fails, and names the example, when a full class name has no usual factory line', () => {
+    const source = 'new \\Gatepost\\Postcode\\Client\\PostcodeClient($http, $factory);';
+    expect(() => withMockGateway(source, 'http://127.0.0.1:1', 'php.md block 9')).toThrow(
+      /php\.md block 9/,
+    );
+  });
+
   it('fails when the example names a base URL of its own', () => {
     const source =
       "new PostcodeClient(\n    $http,\n    new HttpFactory(),\n    baseUrl: 'https://api.postcode.gov.ng',\n);";
@@ -302,12 +318,14 @@ describe('every example on a page', () => {
     'runs and prints only the lines it shows: %s',
     async (name, { source }) => {
       const file = join(folder, `${name.replace(/\W+/g, '-')}.php`);
-      writeFileSync(file, withMockGateway(source, mock.url));
+      writeFileSync(file, withMockGateway(source, mock.url, name));
       const { stdout } = await run('php', ['-d', `auto_prepend_file=${PHP_AUTOLOAD}`, file], {
         env: { ...process.env, NIPOST_API_KEY: 'nipost_test_mock_l3' },
-        timeout: 60_000,
+        timeout: PHP_CHILD_LIMIT_MS,
       });
       expect(stdout.split('\n').slice(0, -1)).toEqual(phpShownOutput(source));
     },
+    // The test limit is above the limit of the child, so the child stops first.
+    PHP_CHILD_LIMIT_MS + 30_000,
   );
 });

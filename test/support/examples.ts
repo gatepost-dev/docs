@@ -177,28 +177,37 @@ function isLoopback(address: string): boolean {
  *
  * @param source - The code of the example.
  * @param baseUrl - The address of the mock gateway. It must be on this machine.
+ * @param name - The name of the example, for the message of a failure.
  * @returns The code that the test runs.
  */
-export function withMockGateway(source: string, baseUrl: string): string {
+export function withMockGateway(source: string, baseUrl: string, name = 'the example'): string {
   if (!isLoopback(baseUrl)) {
     throw new Error(`The mock gateway address ${baseUrl} is not a loopback address.`);
   }
   let pointed = source;
-  if (source.includes('new PostcodeClient(')) {
+  // Any mention of the client class counts, also its full name, so that no form skips the edit.
+  if (source.includes('PostcodeClient')) {
     if (/\bbaseUrl\s*:/.test(source)) {
-      throw new Error('The example names a base URL of its own. The test sets the base URL.');
+      throw new Error(`${name} names a base URL of its own. The test sets the base URL.`);
     }
     if (!source.includes(FACTORY_LINE)) {
       throw new Error(
-        `The test cannot point the example at the mock gateway: no line "${FACTORY_LINE.trim()}".`,
+        `The test cannot point ${name} at the mock gateway: no line "${FACTORY_LINE.trim()}".`,
       );
     }
     pointed = source.replace(FACTORY_LINE, `${FACTORY_LINE}    baseUrl: '${baseUrl}',\n`);
   }
   for (const [address] of pointed.matchAll(/https?:\/\/[^\s'"`)]+/g)) {
     if (!isLoopback(address)) {
-      throw new Error(`The example holds the address ${address}, which is not a loopback address.`);
+      throw new Error(`${name} holds the address ${address}, which is not a loopback address.`);
     }
+  }
+  // Fail closed: a client that the edit did not reach would call the real gateway.
+  if (
+    /PostcodeClient|Gatepost\\Postcode\\Client/.test(pointed) &&
+    !pointed.includes(`baseUrl: '${baseUrl}'`)
+  ) {
+    throw new Error(`${name} does not point at the mock gateway.`);
   }
   return pointed;
 }
