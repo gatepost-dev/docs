@@ -278,7 +278,8 @@ describe('networkBlockEnv', () => {
       '} catch (Throwable $e) { echo $e->getMessage(); }',
     ].join('\n');
     const { stdout } = await run('php', ['-r', script], { env: networkBlockEnv(process.env) });
-    expect(stdout).toContain('via 127.0.0.1');
+    // curl words this error in two ways. Both name the blocked proxy as the place it reached.
+    expect(stdout).toMatch(/Failed to connect to .*127\.0\.0\.1\b/);
   });
 });
 
