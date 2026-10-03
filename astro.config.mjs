@@ -3,6 +3,7 @@
 import starlight from '@astrojs/starlight';
 import { defineConfig } from 'astro/config';
 import { createStarlightTypeDocPlugin } from 'starlight-typedoc';
+import { writeClientSamples } from './scripts/client-samples.ts';
 import { writeSpecPages } from './scripts/spec-pages.ts';
 
 // GitHub Pages serves the org's project site under the repo name. A custom domain changes the
@@ -37,8 +38,9 @@ export default defineConfig({
     {
       name: 'gatepost-generated-pages',
       hooks: {
-        'astro:config:setup': () => {
+        'astro:config:setup': async () => {
           writeSpecPages(import.meta.dirname);
+          await writeClientSamples(import.meta.dirname);
         },
       },
     },

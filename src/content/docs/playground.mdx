@@ -3,6 +3,7 @@ title: Playground
 description: Try the postcode parser of @gatepost/core in your browser, with no network call.
 ---
 
+import ClientSamples from '../../components/ClientSamples.astro';
 import Playground from '../../components/Playground.astro';
 
 The playground runs `@gatepost/core` in your browser. It checks the form of the text as you type, and it shows the forms and the segments of a postcode. It sends nothing to any server, and it keeps nothing.
@@ -10,3 +11,9 @@ The playground runs `@gatepost/core` in your browser. It checks the form of the 
 <Playground />
 
 The playground checks the form only. Only NIPOST's gateway can say whether a building has a postcode.
+
+## What the client returns
+
+`@gatepost/client` needs a key and a network, so the playground does not run it. These are the answers that the client gave to Gatepost's mock gateway when this site was built. The answers use synthetic postcodes with the district `Z99`.
+
+<ClientSamples />
