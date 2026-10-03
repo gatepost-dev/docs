@@ -28,4 +28,4 @@ The gateway refuses every call without a key. Register on [NIPOST's dashboard](h
 - A secret key starts with `nipost_test_` or `nipost_live_`. Keep it on a server.
 - A publishable key starts with `nipost_pk_test_` or `nipost_pk_live_`. A web page can hold it, but it works only from the addresses that you allow in the dashboard.
 
-Test keys work only on NIPOST's staging gateway. NIPOST's docs explain the levels, the credits and the limits: [docs.postcode.gov.ng](https://docs.postcode.gov.ng).
+Test keys work only on NIPOST's staging gateway. NIPOST's docs do not give the address of the staging gateway. Ask NIPOST for it, and pass it as `baseUrl`. NIPOST's docs explain the levels, the credits and the limits: [docs.postcode.gov.ng](https://docs.postcode.gov.ng).

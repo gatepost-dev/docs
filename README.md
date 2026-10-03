@@ -29,14 +29,14 @@ pnpm sdk
 pnpm dev
 ```
 
-Astro serves the site at `http://localhost:4321/docs/`. The scripts turn off Astro's usage data, so the build sends nothing.
+Astro serves the site at `http://localhost:4321/docs/`. The scripts disable Astro's usage data, so the build sends nothing.
 
 ## What it does
 
 - Builds a static site with Astro and Starlight, for GitHub Pages.
 - Writes the API reference from the TSDoc comments and the PHP doc comments of the submodules.
 - Shows the grammar, the client contract and the glossary of the `spec` submodule.
-- Runs each code example of each page against the SDKs and Gatepost's mock gateway.
+- Runs each code example of each hand-written page against the SDKs and Gatepost's mock gateway.
 - Checks each page with axe for WCAG 2.2 AA, in the light and the dark theme.
 - Fails when a page loads anything from another website, when a page lacks the line that says that NIPOST did not make the site, or when a link inside the site breaks. The link check serves the site under `/docs/`, as GitHub Pages does.
 

@@ -6,7 +6,6 @@ This repo is part of Gatepost, unofficial open-source developer tools for Nigeri
 
 - `CODING_STANDARDS.md` and the two files it names hold the rules. Cite rule IDs, such as `API-3`, in reviews and commit bodies.
 - `CONTEXT.md` is the glossary. Name things with its terms in code, tests, docs and commits.
-- `docs/adr/` holds the decisions. When a change contradicts an ADR, say so in the pull request.
 - `spec/` holds the grammar, with its Interface section, and the vectors. The spec wins over code and over these docs.
 
 ## Rules that no config file shows
@@ -26,7 +25,7 @@ This repo is part of Gatepost, unofficial open-source developer tools for Nigeri
 
 1. A failing test came first, and it passes now.
 2. `pnpm check` passes. It runs the formatter, linters, tests, every code example, the accessibility checks, `check-tells`, REUSE and zizmor.
-3. Each code example on a page runs in CI and shows the result that it gets.
+3. Each code example on a hand-written page runs in CI and shows the result that it gets.
 4. A page that describes the public interface matches the spec and the SDK version in the submodules.
 5. Each new domain term is in `CONTEXT.md`.
 6. The diff touches only the lines that the task needs.

@@ -39,8 +39,9 @@
 }
 
 /*
- * A table scrolls inside its own box, which takes the focus (see rehype-scrollable-tables). The
- * table itself must not scroll, or the box would have nothing to scroll.
+ * A table scrolls inside its own box, which takes the focus. The `wrapTables` function of
+ * `scripts/spec-pages.ts` and the `div` tags in the pages make the box. The table itself must
+ * not scroll, or the box would have nothing to scroll.
  */
 .table-scroll {
   overflow-x: auto;
