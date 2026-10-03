@@ -52,7 +52,9 @@ The client needs a PSR-18 HTTP client and a PSR-17 request factory, such as Guzz
 composer require guzzlehttp/guzzle
 ```
 
-Keep the key on a server, and read it from the environment. Set the timeout of your HTTP client, and pass the same value as `timeoutMs`. PSR-18 has no timeout of its own, so the client relies on the timeout of the HTTP client. One `timeoutMs` applies to every call. When you pass none, the client waits 8000 ms, and 15000 ms for `autocomplete`.
+Keep the key on a server, and read it from the environment. PSR-18 has no timeout, so the client cannot stop a slow request. Set the timeout of your HTTP client. With no timeout on the HTTP client, a request can wait without limit.
+
+Pass the same value as `timeoutMs`. It does not set a limit. It tells the client how to read a failed attempt. An attempt that fails after `timeoutMs` or more gives `timeout`, and a faster failure gives `network_error`. One `timeoutMs` applies to every call. When you pass none, the client uses 8000 ms, and 15000 ms for `autocomplete`.
 
 ```php
 <?php

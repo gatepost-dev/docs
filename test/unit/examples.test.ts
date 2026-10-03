@@ -126,6 +126,12 @@ describe('problemsOf', () => {
     expect(problemsOf(block('sh', 'pnpm add x\n'))).toEqual([]);
   });
 
+  it('fails a PHP line that shows a result with no output to compare', () => {
+    expect(problemsOf(block('php', '$r->valid; // true\n'))).toHaveLength(1);
+    expect(problemsOf(block('php', 'var_dump($r->valid); // bool(true)\n'))).toHaveLength(1);
+    expect(problemsOf(block('php', 'echo $r->valid; // 1\n$a = 1; // note\n'))).toHaveLength(1);
+  });
+
   it('fails a block with text after the language', () => {
     expect(problemsOf(block('ts', 'a; // 1\n', 'title="a.ts"'))).toHaveLength(1);
   });
@@ -181,9 +187,32 @@ describe('withMockGateway', () => {
     );
   });
 
-  it('leaves a source without that line as it is', () => {
+  it('leaves a source with no client as it is', () => {
     expect(withMockGateway('echo 1;', 'http://127.0.0.1:1')).toBe('echo 1;');
   });
+
+  it('fails when the request factory is not on its usual line', () => {
+    const source = 'new PostcodeClient(\n  $http,\n  new HttpFactory(),\n);';
+    expect(() => withMockGateway(source, 'http://127.0.0.1:1')).toThrow(/cannot point/);
+  });
+
+  it('fails when the example names a base URL of its own', () => {
+    const source =
+      "new PostcodeClient(\n    $http,\n    new HttpFactory(),\n    baseUrl: 'https://api.postcode.gov.ng',\n);";
+    expect(() => withMockGateway(source, 'http://127.0.0.1:1')).toThrow(/base URL/);
+  });
+
+  it('fails when the example holds an address of another host', () => {
+    const source = "$x = 'https://api.postcode.gov.ng/v1/lookup';\n";
+    expect(() => withMockGateway(source, 'http://127.0.0.1:1')).toThrow(/not a loopback/);
+  });
+
+  it.each(['https://api.postcode.gov.ng', 'http://example.com:80', 'not a url'])(
+    'refuses the mock address %s, which is not on this machine',
+    (address) => {
+      expect(() => withMockGateway('echo 1;', address)).toThrow(/loopback/);
+    },
+  );
 });
 
 describe('every code block on a page', () => {
@@ -276,6 +305,7 @@ describe('every example on a page', () => {
       writeFileSync(file, withMockGateway(source, mock.url));
       const { stdout } = await run('php', ['-d', `auto_prepend_file=${PHP_AUTOLOAD}`, file], {
         env: { ...process.env, NIPOST_API_KEY: 'nipost_test_mock_l3' },
+        timeout: 60_000,
       });
       expect(stdout.split('\n').slice(0, -1)).toEqual(phpShownOutput(source));
     },

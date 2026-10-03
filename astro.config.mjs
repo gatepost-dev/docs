@@ -42,11 +42,21 @@ export default defineConfig({
         'astro:config:setup': async () => {
           writeSpecPages(import.meta.dirname);
           await writeClientSamples(import.meta.dirname);
-          execFileSync(
-            'php',
-            ['scripts/php-reference.php', 'php', 'src/content/docs/reference/php'],
-            { cwd: import.meta.dirname },
-          );
+          try {
+            execFileSync(
+              'php',
+              ['scripts/php-reference.php', 'php', 'src/content/docs/reference/php'],
+              { cwd: import.meta.dirname, stdio: ['ignore', 'inherit', 'inherit'] },
+            );
+          } catch (error) {
+            // The reference script prints its own message. A missing PHP gives only ENOENT.
+            if (error.code === 'ENOENT') {
+              throw new Error('PHP 8.1 or later is needed to build the PHP reference.', {
+                cause: error,
+              });
+            }
+            throw error;
+          }
         },
       },
     },

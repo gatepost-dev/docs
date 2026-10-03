@@ -12,6 +12,9 @@ declare(strict_types=1);
 
 namespace Gatepost\Docs;
 
+use FilesystemIterator;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 use ReflectionClass;
 use ReflectionClassConstant;
 use ReflectionEnum;
@@ -22,8 +25,11 @@ use ReflectionParameter;
 use ReflectionProperty;
 use ReflectionType;
 use RuntimeException;
+use SplFileInfo;
 
 const PREFIX = 'Gatepost\\Postcode\\';
+// A @param tag: a type that can hold spaces inside <>, {} or (), the name and the meaning.
+const PARAM_TAG = '/^(?:[^\s<{(]|<[^>]*>|\{[^}]*\}|\([^)]*\))+\s+\$(\w+)\s*(.*)$/';
 
 /**
  * @return array{string, list<array{string, string}>} The description, and each tag with its text.
@@ -134,17 +140,21 @@ function methodLines(ReflectionMethod $method): array
 function tagLines(array $tags, array $parameters): array
 {
     $names = \array_map(static fn(ReflectionParameter $p): string => $p->getName(), $parameters);
-    $rows = [];
+    $meanings = [];
     $throws = [];
     foreach ($tags as [$tag, $text]) {
         $text = \trim((string) \preg_replace('/\s+/', ' ', $text));
-        if ($tag === 'param' && \preg_match('/^\S+\s+\$(\w+)\s*(.*)$/', $text, $param) === 1) {
+        if ($tag === 'param' && \preg_match(PARAM_TAG, $text, $param) === 1) {
             if (\in_array($param[1], $names, true)) {
-                $rows[] = "| `\${$param[1]}` | {$param[2]} |";
+                $meanings[$param[1]] = $param[2];
             }
         } elseif ($tag === 'throws') {
             $throws[] = "- {$text}";
         }
+    }
+    $rows = [];
+    foreach ($names as $name) {
+        $rows[] = "| `\${$name}` | " . ($meanings[$name] ?? 'Not documented.') . ' |';
     }
     $lines = $rows === [] ? [] : ['#### Parameters', '', '| Name | Meaning |', '| --- | --- |'];
     $lines = $rows === [] ? [] : [...$lines, ...$rows, ''];
@@ -195,7 +205,7 @@ function classLines(ReflectionClass $class): array
         }
     }
     foreach ($class->getReflectionConstants(ReflectionClassConstant::IS_PUBLIC) as $constant) {
-        if (!$constant->isEnumCase()) {
+        if (!$constant->isEnumCase() && !isInternal($constant->getDocComment())) {
             $code = $constant->getName() . ' = ' . literal($constant->getValue());
             $members = [...$members, ...memberLines($constant, $code)];
         }
@@ -203,6 +213,9 @@ function classLines(ReflectionClass $class): array
     // An enum has the properties name and value, which the cases already show.
     $properties = $class->isEnum() ? [] : $class->getProperties(ReflectionProperty::IS_PUBLIC);
     foreach ($properties as $property) {
+        if (isInternal($property->getDocComment())) {
+            continue;
+        }
         $code = typeName($property->getType()) . ' $' . $property->getName();
         $members = [...$members, ...memberLines($property, $code)];
     }
@@ -238,8 +251,17 @@ function publicClasses(string $source): array
         }
     });
     $classes = [];
-    $files = \glob($source . '/{,*/}*.php', \GLOB_BRACE);
-    foreach ($files === false ? [] : $files as $file) {
+    $files = [];
+    $found = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(
+        $source,
+        FilesystemIterator::SKIP_DOTS,
+    ));
+    foreach ($found as $item) {
+        if ($item instanceof SplFileInfo && $item->getExtension() === 'php') {
+            $files[] = $item->getPathname();
+        }
+    }
+    foreach ($files as $file) {
         $path = \substr($file, \strlen($source) + 1, -4);
         $name = PREFIX . \str_replace('/', '\\', $path);
         $exists = \class_exists($name) || \interface_exists($name) || \enum_exists($name);
@@ -272,7 +294,17 @@ function writeReference(array $arguments): int
         return 2;
     }
     [$package, $output] = $arguments;
+    if (!\is_dir($package . '/src')) {
+        \fwrite(\STDERR, "The package folder {$package} has no src folder.\n");
+
+        return 1;
+    }
     $classes = publicClasses($package . '/src');
+    if ($classes === []) {
+        \fwrite(\STDERR, "The folder {$package}/src holds no public class. Write no page.\n");
+
+        return 1;
+    }
     if (!\is_dir($output) && !\mkdir($output, 0o777, true)) {
         throw new RuntimeException("Cannot make {$output}.");
     }
@@ -284,7 +316,9 @@ function writeReference(array $arguments): int
         '---',
         '',
         'The doc comments of the PHP package give this reference. Each page lists the public',
-        'members of one class or enum.',
+        'members of one class or enum. A name with a backslash, such as',
+        '`Psr\Http\Client\ClientInterface`, is a full name. A name without one is in the',
+        '`Gatepost\Postcode` namespace.',
         '',
     ];
     foreach ($classes as $class) {

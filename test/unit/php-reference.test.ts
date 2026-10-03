@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 The Gatepost authors
 // SPDX-License-Identifier: Apache-2.0
 import { execFile } from 'node:child_process';
-import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
@@ -52,6 +52,26 @@ describe('the PHP reference', () => {
 
   it('lists the cases of an enum with their values', () => {
     expect(page('client-errorcode')).toContain("- `RateLimited = 'rate_limited'`");
+  });
+
+  it('fails with a message when the package folder is missing', async () => {
+    await expect(run('php', [SCRIPT, join(folder, 'absent'), folder])).rejects.toMatchObject({
+      code: 1,
+      stderr: expect.stringContaining('has no src folder') as unknown,
+    });
+  });
+
+  it('fails with a message when the package holds no public class', async () => {
+    const empty = mkdtempSync(join(tmpdir(), 'php-empty-'));
+    mkdirSync(join(empty, 'src'));
+    try {
+      await expect(run('php', [SCRIPT, empty, folder])).rejects.toMatchObject({
+        code: 1,
+        stderr: expect.stringContaining('holds no public class') as unknown,
+      });
+    } finally {
+      rmSync(empty, { recursive: true, force: true });
+    }
   });
 
   it('refuses a call without two folders', async () => {

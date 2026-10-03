@@ -145,18 +145,62 @@ export function phpShownOutput(source: string): readonly string[] {
   return Array.from(source.matchAll(PHP_SHOWN_LINE), ([, line]) => line ?? '');
 }
 
+/**
+ * Lists the lines of a PHP example that end in a comment which the check cannot compare. Only an
+ * `echo` line with a comment shows a result, because the test compares the output with it.
+ *
+ * @param source - The code of the example.
+ * @returns The lines, in order.
+ */
+export function unreadablePhpResults(source: string): readonly string[] {
+  return source
+    .split('\n')
+    .filter((line) => TRAILING_COMMENT.test(line) && !/^\s*echo .+; \/\/ .+$/.test(line));
+}
+
 const FACTORY_LINE = '    new HttpFactory(),\n';
+const LOOPBACK_HOSTS = ['127.0.0.1', 'localhost', '[::1]'];
+
+function isLoopback(address: string): boolean {
+  try {
+    return LOOPBACK_HOSTS.includes(new URL(address).hostname);
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Points the client of a PHP example at the mock gateway. The page shows the client with
- * NIPOST's address, so the test adds one named argument after the request factory.
+ * NIPOST's address, so the test adds one named argument after the request factory. A call that
+ * reaches NIPOST would be a breach of the rules, so this function throws unless the example is
+ * sure to call only a loopback address.
  *
  * @param source - The code of the example.
- * @param baseUrl - The address of the mock gateway.
+ * @param baseUrl - The address of the mock gateway. It must be on this machine.
  * @returns The code that the test runs.
  */
 export function withMockGateway(source: string, baseUrl: string): string {
-  return source.replace(FACTORY_LINE, `${FACTORY_LINE}    baseUrl: '${baseUrl}',\n`);
+  if (!isLoopback(baseUrl)) {
+    throw new Error(`The mock gateway address ${baseUrl} is not a loopback address.`);
+  }
+  let pointed = source;
+  if (source.includes('new PostcodeClient(')) {
+    if (/\bbaseUrl\s*:/.test(source)) {
+      throw new Error('The example names a base URL of its own. The test sets the base URL.');
+    }
+    if (!source.includes(FACTORY_LINE)) {
+      throw new Error(
+        `The test cannot point the example at the mock gateway: no line "${FACTORY_LINE.trim()}".`,
+      );
+    }
+    pointed = source.replace(FACTORY_LINE, `${FACTORY_LINE}    baseUrl: '${baseUrl}',\n`);
+  }
+  for (const [address] of pointed.matchAll(/https?:\/\/[^\s'"`)]+/g)) {
+    if (!isLoopback(address)) {
+      throw new Error(`The example holds the address ${address}, which is not a loopback address.`);
+    }
+  }
+  return pointed;
 }
 
 /**
@@ -180,6 +224,11 @@ export function problemsOf(example: Example): readonly string[] {
   if (language === 'ts') {
     for (const line of unreadableResults(source)) {
       problems.push(`The check cannot read the result in "${line.trim()}".`);
+    }
+  }
+  if (language === 'php') {
+    for (const line of unreadablePhpResults(source)) {
+      problems.push(`The check cannot compare the result in "${line.trim()}" with the output.`);
     }
   }
   return problems;
