@@ -63,16 +63,18 @@ Each call throws a `PostcodeError` when it cannot give a result. Its `code` tell
 
 <div class="table-scroll" role="region" tabindex="0" aria-label="Table: Error codes of the client">
 
-| Code                                       | What to do                                                        |
-| ------------------------------------------ | ----------------------------------------------------------------- |
-| `invalid_input`                            | Ask the user to correct the postcode. The client sent no request. |
-| `unauthorized`                             | Check that the key is present and correct.                        |
-| `forbidden`                                | Ask for a lower level, or get a key that allows the level.        |
-| `origin_not_allowed`                       | Add the address of the page to the key in NIPOST's dashboard.     |
-| `insufficient_credits`                     | Use level 1, or ask NIPOST about credits for the level.           |
-| `rate_limited`                             | Wait for `retryAfterMs`, then try again.                          |
-| `server_error`, `network_error`, `timeout` | Try again later. The client has already retried.                  |
-| `unexpected_response`                      | Report it. The gateway sent a body that the client cannot read.   |
+| Code                   | What to do                                                                                                                                          |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `invalid_input`        | Ask the user to correct the postcode. The client sends no request for a bad postcode. The code also covers a 4xx response that no other code names. |
+| `unauthorized`         | Check that the key is present and correct.                                                                                                          |
+| `forbidden`            | Ask for a lower level, or get a key that allows the level.                                                                                          |
+| `origin_not_allowed`   | Add the address of the page to the key in NIPOST's dashboard.                                                                                       |
+| `insufficient_credits` | Use level 1, or ask NIPOST about credits for the level.                                                                                             |
+| `rate_limited`         | Wait for `retryAfterMs` when it is not null, then try again. The client already retried a wait of 10 s or less.                                     |
+| `server_error`         | Try again later. The client retries a 502, 503 or 504 only. Any other 5xx ends the call at once.                                                    |
+| `network_error`        | Check the network, then try again later. The client has already retried.                                                                            |
+| `timeout`              | Try again, or raise `timeoutMs`. The client retries `lookup` and `reverse`, but not `autocomplete`.                                                 |
+| `unexpected_response`  | Report it. The gateway sent a body that the client cannot read. The client does not retry.                                                          |
 
 </div>
 
@@ -108,16 +110,19 @@ place.unit?.postcode.canonical; // 'FC-01-Z99-ZZ-01'
 
 ## Complete a postcode while the user types
 
-`autocomplete` takes the text that a user typed. It names the segment that the user is typing, and returns the gateway's values for it. Cancel the last call at each keystroke.
+`autocomplete` takes the text that a user typed. It names the segment that the user is typing, and returns the gateway's values for it. Cancel the last call at each keystroke, as the example does with `abort`.
 
 ```ts
 import { PostcodeClient } from '@gatepost/client';
 
 const client = new PostcodeClient({ apiKey: process.env['NIPOST_API_KEY'] });
-const keystroke = new AbortController();
-const typing = await client.autocomplete('fc 01 z', { signal: keystroke.signal });
+const previous = new AbortController();
+const stale = client.autocomplete('fc 01', { signal: previous.signal }).catch(() => null);
+previous.abort();
+const typing = await client.autocomplete('fc 01 z');
 typing.segment; // 'district'
 typing.suggestions[0]?.postcode?.canonical; // 'FC-01-Z99'
+await stale; // null
 ```
 
 A cancelled call ends with the reason of the signal, not with a `PostcodeError`.

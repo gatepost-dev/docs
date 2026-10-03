@@ -23,7 +23,8 @@ test('a search sends the text nowhere and keeps no cookie', async ({ page, baseU
   await page.getByRole('button', { name: 'Search' }).click();
   const search = page.getByRole('dialog', { name: 'Search' });
   await search.getByRole('textbox', { name: 'Search' }).fill('postcode');
-  await expect(search.getByRole('link').first()).toBeVisible();
+  // Pagefind loads cold under parallel test load, so the default 5 s can run out.
+  await expect(search.getByRole('link').first()).toBeVisible({ timeout: 15_000 });
   expect([...origins]).toEqual([baseURL]);
   expect(await page.context().cookies()).toEqual([]);
 });

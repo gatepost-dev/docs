@@ -12,8 +12,11 @@ import {
   countShownResults,
   examplesOf,
   pageExamples,
+  NOT_RUN,
   phpShownOutput,
+  problemsOf,
   toCheckedModule,
+  unreadableResults,
   withMockGateway,
   type Example,
 } from '../support/examples.ts';
@@ -24,10 +27,11 @@ const MODULES = {
 };
 // The mock gateway runs in this process, so PHP must run without blocking it.
 const run = promisify(execFile);
-const PHP_AUTOLOAD = join(process.cwd(), 'php/vendor/autoload.php');
+const ROOT = fileURLToPath(new URL('../../', import.meta.url));
+const PHP_AUTOLOAD = join(ROOT, 'php/vendor/autoload.php');
 
 function readJson(path: string): unknown {
-  return JSON.parse(readFileSync(path, 'utf8'));
+  return JSON.parse(readFileSync(join(ROOT, path), 'utf8'));
 }
 
 // The packages that an install command on a page may name: the Gatepost packages, and the HTTP
@@ -47,16 +51,108 @@ function named(examples: readonly Example[]): readonly (readonly [string, Exampl
 }
 
 function inLanguage(language: string): readonly (readonly [string, Example])[] {
-  return named(EXAMPLES.filter((example) => example.language === language));
+  return named(
+    EXAMPLES.filter((example) => example.language === language && example.attributes !== NOT_RUN),
+  );
 }
 
 describe('examplesOf', () => {
   it('finds each fenced block with its language', () => {
     const text = 'Intro.\n\n```ts\nconst a = 1;\n```\n\nMore.\n\n```sh\npnpm add x\n```\n';
     expect(examplesOf('page.md', text)).toEqual([
-      { page: 'page.md', index: 0, language: 'ts', source: 'const a = 1;\n' },
-      { page: 'page.md', index: 1, language: 'sh', source: 'pnpm add x\n' },
+      {
+        page: 'page.md',
+        index: 0,
+        language: 'ts',
+        attributes: '',
+        source: 'const a = 1;\n',
+        closed: true,
+      },
+      {
+        page: 'page.md',
+        index: 1,
+        language: 'sh',
+        attributes: '',
+        source: 'pnpm add x\n',
+        closed: true,
+      },
     ]);
+  });
+
+  it('finds a fence with attributes, a tilde fence and a fence in a list', () => {
+    const text = [
+      '```ts title="a.ts"',
+      'a;',
+      '```',
+      '~~~php',
+      'b;',
+      '~~~',
+      '- item',
+      '',
+      '  ```ts',
+      '  c;',
+      '  ```',
+    ].join('\n');
+    const found = examplesOf('page.md', text);
+    expect(found.map(({ language, attributes, source }) => [language, attributes, source])).toEqual(
+      [
+        ['ts', 'title="a.ts"', 'a;\n'],
+        ['php', '', 'b;\n'],
+        ['ts', '', 'c;\n'],
+      ],
+    );
+  });
+
+  it('keeps a shorter fence of the other kind inside a block', () => {
+    const found = examplesOf('page.md', '````md\n```ts\nx;\n```\n````\n');
+    expect(found).toHaveLength(1);
+    expect(found[0]?.source).toBe('```ts\nx;\n```\n');
+  });
+});
+
+describe('problemsOf', () => {
+  const block = (language: string, source: string, attributes = '', closed = true) => ({
+    page: 'p.md',
+    index: 0,
+    language,
+    attributes,
+    source,
+    closed,
+  });
+
+  it('accepts a block that a check runs', () => {
+    expect(problemsOf(block('ts', 'a; // 1\n'))).toEqual([]);
+    expect(problemsOf(block('php', 'echo 1; // 1\n'))).toEqual([]);
+    expect(problemsOf(block('sh', 'pnpm add x\n'))).toEqual([]);
+  });
+
+  it('fails a block with text after the language', () => {
+    expect(problemsOf(block('ts', 'a; // 1\n', 'title="a.ts"'))).toHaveLength(1);
+  });
+
+  it('fails a block that the page never closes', () => {
+    expect(problemsOf(block('ts', 'a; // 1\n', '', false))).toHaveLength(1);
+  });
+
+  it('fails a block in a language that no check runs', () => {
+    expect(problemsOf(block('python', 'x\n'))).toHaveLength(1);
+    expect(problemsOf(block('', 'x\n'))).toHaveLength(1);
+  });
+
+  it.each(['a; // "x"', 'a; // [1, 2]', 'a; // {}', 'a // 1', 'a; // done'])(
+    'fails the shown result that the check cannot read: %s',
+    (line) => {
+      expect(unreadableResults(`${line}\n`)).toEqual([line]);
+      expect(problemsOf(block('ts', `${line}\n`))).toHaveLength(1);
+    },
+  );
+
+  it('does not fail a comment on its own line or a URL', () => {
+    expect(unreadableResults("// note\nconst u = 'http://x';\n")).toEqual([]);
+  });
+
+  it('lets the not-run mark skip every check', () => {
+    expect(problemsOf(block('python', 'x // "y"\n', NOT_RUN, false))).toEqual([]);
   });
 });
 
@@ -91,13 +187,31 @@ describe('withMockGateway', () => {
 });
 
 describe('every code block on a page', () => {
-  it.each(named(EXAMPLES))('uses a language that a check runs: %s', (_, { language }) => {
-    expect(['ts', 'php', 'sh']).toContain(language);
+  it('exists, so the checks below cannot pass on no block', () => {
+    expect(EXAMPLES.length).toBeGreaterThan(0);
+    expect(EXAMPLES.some(({ language }) => language === 'ts')).toBe(true);
+    expect(EXAMPLES.some(({ language }) => language === 'php')).toBe(true);
+    expect(EXAMPLES.some(({ language }) => language === 'sh')).toBe(true);
+  });
+
+  it.each(named(EXAMPLES))('is one that a check runs, or carries the not-run mark: %s', (_, e) => {
+    expect(problemsOf(e)).toEqual([]);
+  });
+
+  it.each(inLanguage('ts'))('shows at least one result: %s', (_, { source }) => {
+    expect(countShownResults(source)).toBeGreaterThan(0);
+  });
+
+  it.each(inLanguage('php'))('shows at least one result: %s', (_, { source }) => {
+    expect(phpShownOutput(source).length).toBeGreaterThan(0);
   });
 });
 
 describe('every install command on a page', () => {
   it.each(inLanguage('sh'))('names a Gatepost package: %s', (_, { source }) => {
+    const lines = source.split('\n').filter((line) => line !== '');
+    const other = lines.filter((line) => !/^(?:pnpm add|composer require) \S+$/.test(line));
+    expect(other, 'lines that install nothing').toEqual([]);
     const pnpm = Array.from(source.matchAll(/^pnpm add (\S+)$/gm), ([, name]) => name);
     const composer = Array.from(source.matchAll(/^composer require (\S+)$/gm), ([, name]) => name);
     expect(pnpm.length + composer.length).toBeGreaterThan(0);
@@ -116,17 +230,38 @@ describe('every example on a page', () => {
   beforeAll(async () => {
     mock = await startMockServer({ port: 0 });
     process.env['GATEPOST_MOCK_URL'] = mock.url;
-    mkdirSync('temp', { recursive: true });
-    folder = mkdtempSync(join(process.cwd(), 'temp', 'examples-'));
+    mkdirSync(join(ROOT, 'temp'), { recursive: true });
+    folder = mkdtempSync(join(ROOT, 'temp', 'examples-'));
   });
+
+  const moduleOf = (name: string): string => join(folder, `${name.replace(/\W+/g, '-')}.ts`);
 
   afterAll(async () => {
     await mock.close();
     rmSync(folder, { recursive: true, force: true });
   });
 
+  // Vite removes types without checking them, so a wrong type in an example needs its own run.
+  it('type-checks every TypeScript example', { timeout: 120_000 }, async () => {
+    for (const [name, { source }] of inLanguage('ts')) {
+      writeFileSync(moduleOf(name), toCheckedModule(source, MODULES));
+    }
+    writeFileSync(
+      join(folder, 'tsconfig.json'),
+      JSON.stringify({ extends: join(ROOT, 'tsconfig.json'), include: ['*.ts'] }),
+    );
+    const tsc = join(ROOT, 'node_modules/typescript/bin/tsc');
+    let problems = '';
+    try {
+      await run(process.execPath, [tsc, '--noEmit', '-p', folder]);
+    } catch (error) {
+      problems = error instanceof Error && 'stdout' in error ? String(error.stdout) : String(error);
+    }
+    expect(problems).toBe('');
+  });
+
   it.each(inLanguage('ts'))('runs and shows only true results: %s', async (name, { source }) => {
-    const file = join(folder, `${name.replace(/\W+/g, '-')}.ts`);
+    const file = moduleOf(name);
     writeFileSync(file, toCheckedModule(source, MODULES));
     const { checked } = (await import(pathToFileURL(file).href)) as { checked: number };
     expect(checked, 'the number of results that the example compared').toBe(

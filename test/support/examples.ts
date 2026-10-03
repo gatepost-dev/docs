@@ -8,25 +8,63 @@ export interface Example {
   readonly page: string;
   readonly index: number;
   readonly language: string;
+  /** What follows the language on the opening fence, such as `title="a.ts"` or `notrun`. */
+  readonly attributes: string;
   readonly source: string;
+  /** False when the page ends before the closing fence. */
+  readonly closed: boolean;
 }
 
-const FENCE = /^```(\w*)\n([\s\S]*?)^```$/gm;
+/** The mark for a block that cannot run, written after the language: a fence of `ts notrun`. */
+export const NOT_RUN = 'notrun';
+
+const OPENING_FENCE = /^(\s*)(`{3,}|~{3,})(.*)$/;
+
+// A closing fence repeats the character of the opening fence, at least as many times.
+function closes(line: string, fence: string): boolean {
+  const text = line.trim();
+  return text.length >= fence.length && text === fence.charAt(0).repeat(text.length);
+}
 
 /**
- * Finds the code blocks of a Markdown or MDX page.
+ * Finds the code blocks of a Markdown or MDX page. A fence of three backticks or three tildes
+ * opens a block, with any indent and any text after the language.
  *
  * @param page - The path of the page, for the test report.
  * @param text - The text of the page.
- * @returns Each block, in the order of the page.
+ * @returns Each block, in the order of the page. The code has the indent of its fence removed.
  */
 export function examplesOf(page: string, text: string): readonly Example[] {
-  return Array.from(text.matchAll(FENCE), ([, language, source], index) => ({
-    page,
-    index,
-    language: language ?? '',
-    source: source ?? '',
-  }));
+  const examples: Example[] = [];
+  let open: { indent: string; fence: string; info: string; lines: string[] } | undefined;
+  const finish = (closed: boolean): void => {
+    if (open === undefined) return;
+    const [language = '', ...rest] = open.info.trim().split(/\s+/);
+    const source = open.lines.map((line) => `${line}\n`).join('');
+    examples.push({
+      page,
+      index: examples.length,
+      language,
+      attributes: rest.join(' '),
+      source,
+      closed,
+    });
+    open = undefined;
+  };
+  for (const line of text.split('\n')) {
+    if (open === undefined) {
+      const [, indent = '', fence = '', info = ''] = OPENING_FENCE.exec(line) ?? [];
+      if (fence !== '') open = { indent, fence, info, lines: [] };
+    } else if (closes(line, open.fence)) {
+      finish(true);
+    } else {
+      open.lines.push(
+        line.startsWith(open.indent) ? line.slice(open.indent.length) : line.trimStart(),
+      );
+    }
+  }
+  finish(false);
+  return examples;
 }
 
 /**
@@ -43,6 +81,22 @@ export function pageExamples(): readonly Example[] {
 // it into a call of `shown`, which compares the value and counts the call. A guard such as
 // `if (result.ok)` can skip a line, so the test compares the count with the number of lines.
 const RESULT_LINE = /^(\s*)(.+);\s*\/\/ *('[^']*'|-?\d+(?:\.\d+)?|true|false|null|undefined)$/gm;
+
+const SHOWN_VALUE = /;\s*\/\/ *('[^']*'|-?\d+(?:\.\d+)?|true|false|null|undefined)$/;
+const TRAILING_COMMENT = /\S[ \t]+\/\/[ \t]*\S/;
+
+/**
+ * Lists the lines of a TypeScript example that end in a comment which the check cannot read as a
+ * result. Such a line would show a result that nothing compares.
+ *
+ * @param source - The code of the example.
+ * @returns The lines, in order.
+ */
+export function unreadableResults(source: string): readonly string[] {
+  return source
+    .split('\n')
+    .filter((line) => TRAILING_COMMENT.test(line) && !SHOWN_VALUE.test(line));
+}
 
 /**
  * Counts the lines of a TypeScript example that show a result.
@@ -103,4 +157,30 @@ const FACTORY_LINE = '    new HttpFactory(),\n';
  */
 export function withMockGateway(source: string, baseUrl: string): string {
   return source.replace(FACTORY_LINE, `${FACTORY_LINE}    baseUrl: '${baseUrl}',\n`);
+}
+
+/**
+ * Lists what stops the check from running a block. A block with the `notrun` mark has none.
+ *
+ * @param example - The block.
+ * @returns A sentence for each problem, or an empty list.
+ */
+export function problemsOf(example: Example): readonly string[] {
+  const { language, attributes, source, closed } = example;
+  // A PHP line that prints with no result comment needs no check here. The test compares the whole
+  // output of the example with the comments, so that line changes the output and fails it.
+  if (attributes === NOT_RUN) return [];
+  const problems: string[] = [];
+  if (!closed) problems.push('The fence has no closing fence.');
+  if (attributes !== '')
+    problems.push(`The fence has the text "${attributes}" after the language.`);
+  if (!['ts', 'php', 'sh'].includes(language)) {
+    problems.push(`No check runs a block in the language "${language}".`);
+  }
+  if (language === 'ts') {
+    for (const line of unreadableResults(source)) {
+      problems.push(`The check cannot read the result in "${line.trim()}".`);
+    }
+  }
+  return problems;
 }
