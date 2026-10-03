@@ -1,0 +1,36 @@
+# SPDX-FileCopyrightText: 2026 The Gatepost authors
+# SPDX-License-Identifier: Apache-2.0
+name: links
+
+# The links to other sites change without a commit here, so a weekly job checks them. A pull
+# request checks only the links inside the site, which need no network.
+on:
+  schedule:
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  external:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: recursive
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: '8.4'
+          tools: composer
+          coverage: none
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm sdk
+      - run: pnpm build
+      - run: pnpm links:external

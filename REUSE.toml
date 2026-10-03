@@ -1,0 +1,16 @@
+version = 1
+
+[[annotations]]
+path = [
+  "**/*.md", "**/*.mdx", "**/*.json", "pnpm-lock.yaml", "pnpm-workspace.yaml", ".prettierignore",
+  "**/NOTICE", "CLAUDE.md", ".gitmodules", "public/*.png",
+]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 The Gatepost authors"
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = ["src/assets/*.svg", "public/favicon.svg"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 The Gatepost authors"
+SPDX-License-Identifier = "Apache-2.0"

@@ -1,0 +1,15 @@
+---
+// SPDX-FileCopyrightText: 2026 The Gatepost authors
+// SPDX-License-Identifier: Apache-2.0
+// The answers of the client that the build recorded against the mock gateway. The page needs no
+// script and makes no call to show them.
+import { Code } from '@astrojs/starlight/components';
+import samples from '../generated/client-samples.json';
+---
+
+{samples.map(({ call, result }) => (
+  <Fragment>
+    <Code code={call} lang="ts" />
+    <Code code={JSON.stringify(result, null, 2)} lang="json" />
+  </Fragment>
+))}

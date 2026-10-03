@@ -1,0 +1,10 @@
+pnpm-lock.yaml
+spec
+js
+php
+dist
+temp
+coverage
+.astro
+src/content/docs/spec
+src/content/docs/reference

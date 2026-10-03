@@ -1,0 +1,76 @@
+/* SPDX-FileCopyrightText: 2026 The Gatepost authors */
+/* SPDX-License-Identifier: Apache-2.0 */
+/*
+ * The theme tokens of the site (UI-3). The colours come from the brand: near-black #0E1513, white
+ * and teal #0B8574. Teal text needs a lighter tone on the dark theme and a darker one on the
+ * light theme to reach 4.5:1, so each theme sets its own text accent.
+ * test/browser/accessibility.spec.ts checks the contrast of each pair that the site uses.
+ */
+:root {
+  --sl-font: 'Overpass';
+  --sl-color-white: #ffffff;
+  --sl-color-gray-1: #e6ebe9;
+  --sl-color-gray-2: #c5cecb;
+  --sl-color-gray-3: #97a29f;
+  --sl-color-gray-4: #5f6a67;
+  --sl-color-gray-5: #3a4341;
+  --sl-color-gray-6: #1d2523;
+  --sl-color-black: #0e1513;
+  --sl-color-accent-low: #0c3b34;
+  --sl-color-accent: #0b8574;
+  --sl-color-accent-high: #8fdfd1;
+  --sl-color-text-accent: var(--sl-color-accent-high);
+}
+
+:root[data-theme='light'] {
+  --sl-color-white: #0e1513;
+  --sl-color-gray-1: #1d2523;
+  --sl-color-gray-2: #2e3735;
+  --sl-color-gray-3: #4b5653;
+  --sl-color-gray-4: #7a8582;
+  --sl-color-gray-5: #c0c8c5;
+  --sl-color-gray-6: #e7ecea;
+  --sl-color-gray-7: #f3f6f5;
+  --sl-color-black: #ffffff;
+  --sl-color-accent-low: #c9eee7;
+  --sl-color-accent: #0b8574;
+  --sl-color-accent-high: #075a4f;
+  --sl-color-text-accent: var(--sl-color-accent-high);
+}
+
+/*
+ * A table scrolls inside its own box, which takes the focus. The `wrapTables` function of
+ * `scripts/spec-pages.ts` and the `div` tags in the pages make the box. The table itself must
+ * not scroll, or the box would have nothing to scroll.
+ */
+.table-scroll {
+  overflow-x: auto;
+}
+
+.table-scroll:focus-visible {
+  outline: 2px solid var(--sl-color-accent);
+  outline-offset: 2px;
+}
+
+.sl-markdown-content .table-scroll > table {
+  display: table;
+  overflow: visible;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0s !important;
+    animation-duration: 0s !important;
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "extends": "astro/tsconfigs/strictest",
+  "compilerOptions": {
+    "types": ["node"],
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "noPropertyAccessFromIndexSignature": true
+  },
+  "include": [".astro/types.d.ts", "src", "scripts", "test"],
+  "exclude": ["dist", "src/content/docs/reference"]
+}

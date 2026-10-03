@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <title>Gatepost</title>
+  <style>
+    @media (prefers-color-scheme: dark) {
+      .band { fill: #FFFFFF; }
+    }
+  </style>
+  <path class="band" fill="#0E1513" d="
+    M0 0h32v4H4v28H0z
+    M6 6h26v4H10v22H6z
+    M12 12h20v4H16v16h-4z
+    M18 18h14v4H22v10h-4z"/>
+  <path fill="#0B8574" d="M24 24h8v8h-8z"/>
+</svg>
