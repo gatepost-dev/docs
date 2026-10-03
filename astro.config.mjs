@@ -107,7 +107,7 @@ export default defineConfig({
             },
           ],
         },
-        { label: 'Project', items: ['privacy'] },
+        { label: 'Project', items: ['readiness', 'privacy'] },
       ],
     }),
   ],

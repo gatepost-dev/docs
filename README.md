@@ -18,7 +18,10 @@ The docs site of Gatepost: guides for each SDK, the API reference, the spec and 
 git clone --recurse-submodules https://github.com/gatepost-dev/docs
 cd docs
 pnpm install
+pnpm sdk
 ```
+
+`pnpm sdk` installs and builds the SDKs in the `js` and `php` submodules, because the site documents their source and runs its examples against them.
 
 ## Quickstart
 
@@ -31,7 +34,11 @@ Astro serves the site at `http://localhost:4321/docs/`. The scripts turn off Ast
 ## What it does
 
 - Builds a static site with Astro and Starlight, for GitHub Pages.
-- Fails when a page loads anything from another website, or when a page lacks the line that says that NIPOST did not make the site.
+- Writes the API reference from the TSDoc comments and the PHP doc comments of the submodules.
+- Shows the grammar, the client contract and the glossary of the `spec` submodule.
+- Runs each code example of each page against the SDKs and Gatepost's mock gateway.
+- Checks each page with axe for WCAG 2.2 AA, in the light and the dark theme.
+- Fails when a page loads anything from another website, or when a link inside the site breaks.
 
 ## Requirements
 
@@ -39,10 +46,11 @@ Astro serves the site at `http://localhost:4321/docs/`. The scripts turn off Ast
 | ----------------------------------- | ----------------------------------- |
 | Node                                | 24.15 or later                      |
 | pnpm                                | 12, through Corepack                |
+| PHP, for the PHP pages              | 8.1 or later, with Composer         |
 | Python, for `check-tells` and REUSE | 3.11 or later, with uv              |
 | Gatepost spec                       | the version in the `spec` submodule |
 
-`pnpm check` runs every check that CI runs.
+`pnpm check` runs every check that CI runs. The browser tests need Chromium: run `pnpm exec playwright install chromium` once.
 
 ## Docs
 
