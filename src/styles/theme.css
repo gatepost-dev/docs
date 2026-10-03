@@ -3,8 +3,8 @@
 /*
  * The theme tokens of the site (UI-3). The colours come from the brand: near-black #0E1513, white
  * and teal #0B8574. Teal text needs a lighter tone on the dark theme and a darker one on the
- * light theme to reach 4.5:1, so each theme sets its own text accent. test/theme.test.ts checks
- * the contrast of each pair that the site uses.
+ * light theme to reach 4.5:1, so each theme sets its own text accent.
+ * test/browser/accessibility.spec.ts checks the contrast of each pair that the site uses.
  */
 :root {
   --sl-font: 'Overpass';
