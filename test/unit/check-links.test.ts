@@ -4,7 +4,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { brokenLinks, linksToSkip } from '../../scripts/check-links.ts';
+import { brokenLinks, linksToSkip, MINIMUM_LINKS, verdict } from '../../scripts/check-links.ts';
 
 function skipped(url: string, external: boolean): boolean {
   return linksToSkip(external).some((pattern) => new RegExp(pattern).test(url));
@@ -49,6 +49,30 @@ describe('linksToSkip', () => {
   });
 });
 
+describe('verdict', () => {
+  it('passes when no link is broken and the crawl found enough links', () => {
+    expect(verdict(MINIMUM_LINKS, []).code).toBe(0);
+    expect(verdict(MINIMUM_LINKS, []).lines).toEqual([`${String(MINIMUM_LINKS)} links, 0 broken.`]);
+  });
+
+  it('fails when the crawl found too few links, because it missed the site', () => {
+    const { code, lines } = verdict(MINIMUM_LINKS - 1, []);
+    expect(code).toBe(1);
+    expect(lines.join('\n')).toContain('The crawl missed the site.');
+  });
+
+  it('fails when a link is broken, and names it', () => {
+    const { code, lines } = verdict(500, ['a: b (404)']);
+    expect(code).toBe(1);
+    expect(lines[0]).toBe('a: b (404)');
+    expect(lines).toContain('500 links, 1 broken.');
+  });
+
+  it('fails when nothing was found at all', () => {
+    expect(verdict(0, []).code).toBe(1);
+  });
+});
+
 describe('brokenLinks', () => {
   const folders: string[] = [];
   afterEach(() => {
@@ -90,6 +114,23 @@ describe('brokenLinks', () => {
       start: '<h1 id="top">Start</h1>',
     });
     expect((await brokenLinks(dist, false)).broken).toHaveLength(2);
+  });
+
+  it('fails an absolute link of the site to a missing page', async () => {
+    const dist = site({
+      '.': '<a href="https://gatepost-dev.github.io/docs/start/">a</a> <a href="https://gatepost-dev.github.io/docs/typscript/">b</a>',
+      start: '<h1>Start</h1>',
+    });
+    const { broken } = await brokenLinks(dist, false);
+    expect(broken).toHaveLength(1);
+    expect(broken[0]).toContain('typscript');
+  });
+
+  it('skips only the canonical link of the 404 page, which has no page of its own', async () => {
+    const dist = site({
+      '.': '<a href="https://gatepost-dev.github.io/docs/404/">a</a>',
+    });
+    expect((await brokenLinks(dist, false)).broken).toEqual([]);
   });
 
   it('counts the links it followed', async () => {
