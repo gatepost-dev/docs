@@ -7,7 +7,9 @@ const PLAYGROUND = builtFiles('.html').find(({ path }) => path === 'playground/i
 
 describe('the playground page', () => {
   it('shows the answers that the client gave to the mock gateway at build time', () => {
-    expect(PLAYGROUND?.text).toContain('SYNTHETIC LGA');
+    for (const text of ['FC-01-Z99-ZZ-02', 'not_found', 'Z99', 'SYNTHETIC LGA']) {
+      expect(PLAYGROUND?.text).toContain(text);
+    }
     expect(PLAYGROUND?.text).toContain('insufficient_credits');
   });
 });
