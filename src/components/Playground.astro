@@ -1,0 +1,150 @@
+---
+// SPDX-FileCopyrightText: 2026 The Gatepost authors
+// SPDX-License-Identifier: Apache-2.0
+// The playground runs @gatepost/core in the reader's browser. The field has no form and no name,
+// so the Enter key sends nothing, and the address bar never holds what the reader typed.
+import { message } from '../playground/describe.ts';
+---
+
+<div class="playground" data-playground data-status="idle">
+  <label for="playground-postcode">{message('playground.label')}</label>
+  <p id="playground-hint" class="hint">
+    {message('playground.hint')}
+  </p>
+  <input
+    id="playground-postcode"
+    data-part="postcode"
+    type="text"
+    autocomplete="off"
+    autocapitalize="characters"
+    spellcheck="false"
+    aria-describedby="playground-hint playground-status"
+  />
+  <label class="check">
+    <input type="checkbox" data-part="partial" />
+    {message('playground.partial')}
+  </label>
+  <p id="playground-status" class="status" role="status" data-part="status">
+    {message('playground.idle')}
+  </p>
+  <p class="suggestion" data-part="suggestion" hidden>
+    {message('result.suggestion')} <code data-part="suggested"></code>
+    <button type="button" data-part="use-suggestion">
+      {message('playground.useSuggestion')}
+    </button>
+  </p>
+  <h2 id="playground-segments">{message('playground.segments')}</h2>
+  <ol class="segments" data-part="segments" aria-labelledby="playground-segments"></ol>
+  <h2 id="playground-forms">{message('playground.details')}</h2>
+  <dl class="forms" data-part="forms" aria-labelledby="playground-forms"></dl>
+  <h2>{message('accuracy.heading')}</h2>
+  <label for="playground-accuracy">{message('accuracy.label')}</label>
+  <p id="playground-accuracy-hint" class="hint">
+    {message('accuracy.hint')}
+  </p>
+  <input
+    id="playground-accuracy"
+    data-part="accuracy"
+    type="number"
+    min="0"
+    step="any"
+    inputmode="decimal"
+    aria-describedby="playground-accuracy-hint playground-accuracy-status"
+  />
+  <p id="playground-accuracy-status" class="status" role="status" data-part="accuracy-status"></p>
+  <noscript>
+    <p>{message('playground.noScript')}</p>
+  </noscript>
+</div>
+
+<script>
+  import { startPlayground } from '../playground/view.ts';
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-playground]')) {
+    startPlayground(root);
+  }
+</script>
+
+<style>
+  .playground {
+    display: grid;
+    gap: 0.75rem;
+  }
+  .playground label {
+    font-weight: 600;
+  }
+  .hint {
+    margin: 0;
+    color: var(--sl-color-gray-2);
+  }
+  .playground input[type='text'],
+  .playground input[type='number'] {
+    font-family: var(--__sl-font-mono);
+    font-size: var(--sl-text-xl);
+    padding: 0.5rem 0.75rem;
+    border: 2px solid var(--sl-color-gray-4);
+    border-radius: 0.25rem;
+    background: var(--sl-color-black);
+    color: var(--sl-color-white);
+  }
+  .playground input:focus-visible,
+  .playground button:focus-visible {
+    outline: 3px solid var(--sl-color-text-accent);
+    outline-offset: 2px;
+  }
+  .check {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    font-weight: 400;
+  }
+  .check input {
+    inline-size: 1.25rem;
+    block-size: 1.25rem;
+  }
+  .status {
+    margin: 0;
+    min-block-size: 1.75em;
+  }
+  .suggestion button {
+    margin-inline-start: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    border: 2px solid var(--sl-color-text-accent);
+    border-radius: 0.25rem;
+    background: transparent;
+    color: var(--sl-color-text-accent);
+    font: inherit;
+    cursor: pointer;
+  }
+  .segments {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(6rem, 1fr));
+    gap: 0.5rem;
+    padding: 0;
+    list-style: none;
+  }
+  .segments :global(li) {
+    display: grid;
+    gap: 0.25rem;
+    margin: 0;
+    padding: 0.5rem;
+    border: 2px solid var(--sl-color-gray-5);
+    border-radius: 0.25rem;
+  }
+  .segments :global(li[data-problem='true']) {
+    border-style: dashed;
+    border-color: var(--sl-color-text-accent);
+  }
+  .segments :global(code) {
+    font-size: var(--sl-text-lg);
+    min-block-size: 1.5em;
+  }
+  .forms {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 0.25rem 1rem;
+  }
+  .forms :global(dd) {
+    margin: 0;
+  }
+</style>

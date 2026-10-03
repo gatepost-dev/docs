@@ -16,6 +16,10 @@ Your browser keeps two settings of this site, and the site never sends them anyw
 
 The search box runs in your browser. It reads an index that this site built when it was published. Your search text stays in your browser.
 
+## Playground
+
+The playground runs in your browser. It sends what you type to no server, and it keeps none of it. The address bar never holds what you type.
+
 ## Hosting
 
 GitHub hosts this site on GitHub Pages. [GitHub logs the IP address of each visitor](https://docs.github.com/en/pages/getting-started-with-github-pages/about-github-pages#data-collection) for security. The Gatepost team does not see these logs.

@@ -9,5 +9,11 @@ export default defineConfig({
       { test: { name: 'unit', include: ['test/unit/**/*.test.ts'] } },
       { test: { name: 'site', include: ['test/site/**/*.test.ts'] } },
     ],
+    // The unit tests measure the logic of the playground. The browser tests cover its DOM module,
+    // view.ts.
+    coverage: {
+      include: ['src/playground/describe.ts'],
+      thresholds: { branches: 80 },
+    },
   },
 });

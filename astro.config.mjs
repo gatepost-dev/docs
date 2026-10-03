@@ -74,6 +74,7 @@ export default defineConfig({
       expressiveCode: { defaultProps: { wrap: true } },
       plugins: [coreTypeDoc(typeDocOf('core')), clientTypeDoc(typeDocOf('client'))],
       sidebar: [
+        { label: 'Start', items: ['playground'] },
         { label: 'Spec', items: [{ autogenerate: { directory: 'spec' } }] },
         { label: 'API reference', items: [coreTypeDocGroup, clientTypeDocGroup] },
         { label: 'Project', items: ['privacy'] },
