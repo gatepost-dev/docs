@@ -5,6 +5,13 @@ description: What this site keeps, what it sends and what GitHub logs.
 
 This site has no analytics, no tracking and no cookies. Every script, font, image and style comes from this site itself. No page loads anything from another website.
 
+## What your browser keeps
+
+Your browser keeps two settings of this site, and the site never sends them anywhere.
+
+- Your choice of a light or a dark theme, in local storage under the name `starlight-theme`.
+- Which groups of the side menu you opened, in session storage under the name `sl-sidebar-state`. The browser deletes it when you close the tab.
+
 ## Search
 
 The search box runs in your browser. It reads an index that this site built when it was published. Your search text stays in your browser.

@@ -38,6 +38,11 @@ const EXCEPTIONS: readonly { name: RegExp; licence: string; reason: string }[] =
     licence: 'MPL-2.0',
     reason: 'A build tool that Vite runs, unchanged. The site does not ship it.',
   },
+  {
+    name: /^(?:@axe-core\/playwright|axe-core)$/,
+    licence: 'MPL-2.0',
+    reason: 'The accessibility checker of the browser tests, unchanged. The site does not ship it.',
+  },
 ];
 
 /**

@@ -13,7 +13,7 @@
     "preview": "ASTRO_TELEMETRY_DISABLED=1 astro preview",
     "check": "run-s check:source check:site check:policy",
     "check:source": "run-s format:check lint typecheck test",
-    "check:site": "run-s build test:site",
+    "check:site": "run-s build test:site test:browser",
     "check:policy": "run-s tells prose context:check licences reuse:check workflows:check",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -26,7 +26,8 @@
     "context:check": "cmp CONTEXT.md spec/CONTEXT.md",
     "licences": "node scripts/check-licences.ts",
     "reuse:check": "uvx --with charset-normalizer==3.5.2 reuse@6.2.0 lint",
-    "workflows:check": "uvx zizmor@1.30.1 --offline .github/workflows"
+    "workflows:check": "uvx zizmor@1.30.1 --offline .github/workflows",
+    "test:browser": "playwright test"
   },
   "dependencies": {
     "@astrojs/starlight": "^0.42.5",
@@ -35,10 +36,12 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
+    "@axe-core/playwright": "^4.13.0",
     "@commitlint/cli": "^21.2.3",
     "@commitlint/config-conventional": "^21.2.3",
     "@eslint-community/eslint-plugin-eslint-comments": "^4.8.1",
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.63.0",
     "@types/node": "^24.19.1",
     "eslint": "^10.11.0",
     "npm-run-all2": "^9.0.3",
