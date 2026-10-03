@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: 2026 The Gatepost authors
+# SPDX-License-Identifier: Apache-2.0
+node_modules/
+dist/
+temp/
+coverage/
+.astro/
+test-results/
+playwright-report/
+# What the build writes from the spec, the doc comments and the mock gateway.
+src/content/docs/spec/
+src/content/docs/reference/
+src/generated/

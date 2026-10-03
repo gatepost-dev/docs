@@ -1,0 +1,9 @@
+[submodule "spec"]
+	path = spec
+	url = https://github.com/gatepost-dev/spec
+[submodule "js"]
+	path = js
+	url = https://github.com/gatepost-dev/js
+[submodule "php"]
+	path = php
+	url = https://github.com/gatepost-dev/php

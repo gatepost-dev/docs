@@ -1,0 +1,19 @@
+---
+// SPDX-FileCopyrightText: 2026 The Gatepost authors
+// SPDX-License-Identifier: Apache-2.0
+// Every page carries the line that says that NIPOST did not make the site (LIC-3).
+import Default from '@astrojs/starlight/components/Footer.astro';
+---
+
+<Default />
+<p class="unofficial">Unofficial. Not made or endorsed by NIPOST.</p>
+
+<style>
+  .unofficial {
+    margin-block: 2rem 0;
+    padding-block-start: 1rem;
+    border-block-start: 1px solid var(--sl-color-hairline);
+    font-size: var(--sl-text-sm);
+    color: var(--sl-color-gray-2);
+  }
+</style>

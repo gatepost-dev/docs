@@ -1,0 +1,42 @@
+# SPDX-FileCopyrightText: 2026 The Gatepost authors
+# SPDX-License-Identifier: Apache-2.0
+name: pull request
+
+# A squash merge puts the title and the body of the pull request on main as the commit message.
+# An edit of the title or the body does not push a commit, so it must start this job again.
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pull-request-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  squash-message:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: true
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      # The title and the body come through env, so that no text of the pull request ends up
+      # inside the script.
+      - name: Check the message that the squash merge puts on main
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+          NUMBER: ${{ github.event.pull_request.number }}
+          BODY: ${{ github.event.pull_request.body }}
+        run: |
+          printf '%s (#%s)\n\n%s\n' "$TITLE" "$NUMBER" "$BODY" > "$RUNNER_TEMP/message"
+          python3 spec/scripts/check-tells --squash-msg "$RUNNER_TEMP/message" --no-scope
+          pnpm exec commitlint --edit "$RUNNER_TEMP/message"
