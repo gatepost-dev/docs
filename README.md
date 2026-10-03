@@ -38,7 +38,7 @@ Astro serves the site at `http://localhost:4321/docs/`. The scripts turn off Ast
 - Shows the grammar, the client contract and the glossary of the `spec` submodule.
 - Runs each code example of each page against the SDKs and Gatepost's mock gateway.
 - Checks each page with axe for WCAG 2.2 AA, in the light and the dark theme.
-- Fails when a page loads anything from another website, or when a link inside the site breaks.
+- Fails when a page loads anything from another website, when a page lacks the line that says that NIPOST did not make the site, or when a link inside the site breaks. The link check serves the site under `/docs/`, as GitHub Pages does.
 
 ## Requirements
 

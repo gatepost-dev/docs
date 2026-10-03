@@ -3,18 +3,28 @@
 // Checks the links of the built site. By default it follows only the links inside the site,
 // with their fragments, so it needs no network. With --external, it also checks the links to
 // other sites, as a weekly job does. It never calls the hosts that NIPOST's rules close to us.
+import { cpSync, mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import process from 'node:process';
 import { check, LinkState } from 'linkinator';
 
-// linkinator serves dist/ itself, on a free port of this address.
+// linkinator serves a folder itself, on a free port of this address.
 const LOCAL = 'http://127\\.0\\.0\\.1:\\d+';
+
+// A crawl that finds fewer links than this has missed the site.
+const MINIMUM_LINKS = 100;
 
 // The gateway and NIPOST's platform: Gatepost calls neither from a link checker.
 const NEVER = [
   '^https?://api\\.postcode\\.gov\\.ng',
   '^https?://platform\\.postcode\\.gov\\.ng',
-  '^https?://(?:www\\.)?postcode\\.gov\\.ng/api/',
+  '^https?://(?:www\\.)?postcode\\.gov\\.ng/api(?:[/?#]|$)',
 ];
+
+// The absolute links of the site to itself, such as the canonical link of a page. They name the
+// published site, which lags the build, so the relative links stand for them.
+const OWN_SITE = '^https://gatepost-dev\\.github\\.io/docs(?:[/?#]|$)';
 
 /**
  * Lists the links that the check skips.
@@ -23,22 +33,49 @@ const NEVER = [
  * @returns The patterns of the links to skip.
  */
 export function linksToSkip(external: boolean): readonly string[] {
-  return external ? NEVER : [...NEVER, `^(?!${LOCAL})`];
+  return external ? [...NEVER, OWN_SITE] : [...NEVER, OWN_SITE, `^(?!${LOCAL})`];
+}
+
+/**
+ * Checks the links of a built site, as GitHub Pages serves it: under /docs/. A link that lacks
+ * the /docs base finds no page, as it does on GitHub Pages.
+ *
+ * @param dist - The folder of the built site.
+ * @param external - Whether the check follows links to other sites.
+ * @returns The number of links that the check followed, and a line for each broken link.
+ */
+export async function brokenLinks(
+  dist: string,
+  external: boolean,
+): Promise<{ total: number; broken: readonly string[] }> {
+  const root = mkdtempSync(join(tmpdir(), 'gatepost-links-'));
+  try {
+    cpSync(dist, join(root, 'docs'), { recursive: true });
+    const result = await check({
+      path: 'docs/',
+      serverRoot: root,
+      recurse: true,
+      checkFragments: true,
+      // Many requests to one host bring 429 answers, so the job asks fewer and tries again.
+      concurrency: 10,
+      retry: true,
+      linksToSkip: [...linksToSkip(external)],
+    });
+    const broken = result.links
+      .filter((link) => link.state === LinkState.BROKEN)
+      .map((link) => `${link.parent ?? ''}: ${link.url} (${String(link.status)})`);
+    return { total: result.links.length, broken };
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
 }
 
 if (import.meta.main) {
-  const result = await check({
-    path: 'dist',
-    recurse: true,
-    checkFragments: true,
-    linksToSkip: [...linksToSkip(process.argv.includes('--external'))],
-    // The site lives under /docs on GitHub Pages, and the check serves dist/ at the root.
-    urlRewriteExpressions: [{ pattern: new RegExp(`^(${LOCAL})/docs/`), replacement: '$1/' }],
-  });
-  const broken = result.links.filter((link) => link.state === LinkState.BROKEN);
-  for (const link of broken) {
-    process.stdout.write(`${link.parent ?? ''}: ${link.url} (${String(link.status)})\n`);
+  const { total, broken } = await brokenLinks('dist', process.argv.includes('--external'));
+  for (const line of broken) process.stdout.write(`${line}\n`);
+  process.stdout.write(`${String(total)} links, ${String(broken.length)} broken.\n`);
+  if (total < MINIMUM_LINKS) {
+    process.stdout.write(`Only ${String(total)} links found. The crawl missed the site.\n`);
   }
-  process.stdout.write(`${String(result.links.length)} links, ${String(broken.length)} broken.\n`);
-  process.exitCode = broken.length === 0 ? 0 : 1;
+  process.exitCode = broken.length === 0 && total >= MINIMUM_LINKS ? 0 : 1;
 }

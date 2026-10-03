@@ -1,9 +1,9 @@
 ---
 title: Readiness tracker
-description: Common tools that reject or hide Nigeria's new postcode, and the fix that Gatepost sent to each one.
+description: Common tools that reject or hide Nigeria's new postcode, and the state of the fix for each one.
 ---
 
-On 1 October 2026, NIPOST launched a postcode of 11 letters and digits. Some common tools still accept only the old 6-digit postcode, or hide the postcode field for Nigeria. Gatepost sends a fix to each tool, and this page tracks each fix.
+On 1 October 2026, NIPOST launched a postcode of 11 letters and digits, as [its docs](https://docs.postcode.gov.ng) describe. Some common tools still accept only the old 6-digit postcode, or hide the postcode field for Nigeria. Gatepost has sent a fix to three of the five tools below and has not sent a fix to the other two. This page shows the state on 3 October 2026.
 
 <div class="table-scroll" role="region" tabindex="0" aria-label="Table: Readiness of common tools">
 
@@ -17,6 +17,6 @@ On 1 October 2026, NIPOST launched a postcode of 11 letters and digits. Some com
 
 </div>
 
-Each fix accepts both the old 6-digit postcode and the new 11-character postcode. Each fix also rejects `00` in the LGA and the unit, as NIPOST's format does.
+Each sent fix accepts both the old 6-digit postcode and the new 11-character postcode. Each sent fix also rejects `00` in the LGA and the unit, as NIPOST's format does. The two fixes that are not sent will do the same.
 
-When a status changes, the row links the pull request or the issue.
+When a fix is sent, the row links the pull request or the issue.
