@@ -3,6 +3,7 @@
 import starlight from '@astrojs/starlight';
 import { defineConfig } from 'astro/config';
 import { createStarlightTypeDocPlugin } from 'starlight-typedoc';
+import { writeSpecPages } from './scripts/spec-pages.ts';
 
 // GitHub Pages serves the org's project site under the repo name. A custom domain changes the
 // site and sets the base to '/'.
@@ -33,6 +34,14 @@ export default defineConfig({
   base,
   trailingSlash: 'always',
   integrations: [
+    {
+      name: 'gatepost-generated-pages',
+      hooks: {
+        'astro:config:setup': () => {
+          writeSpecPages(import.meta.dirname);
+        },
+      },
+    },
     starlight({
       title: 'Gatepost',
       description: "Unofficial developer tools for Nigeria's digital postcode.",
@@ -65,6 +74,7 @@ export default defineConfig({
       expressiveCode: { defaultProps: { wrap: true } },
       plugins: [coreTypeDoc(typeDocOf('core')), clientTypeDoc(typeDocOf('client'))],
       sidebar: [
+        { label: 'Spec', items: [{ autogenerate: { directory: 'spec' } }] },
         { label: 'API reference', items: [coreTypeDocGroup, clientTypeDocGroup] },
         { label: 'Project', items: ['privacy'] },
       ],
