@@ -5,6 +5,7 @@ import starlight from '@astrojs/starlight';
 import { defineConfig } from 'astro/config';
 import { createStarlightTypeDocPlugin } from 'starlight-typedoc';
 import { writeClientSamples } from './scripts/client-samples.ts';
+import { copyPluginImage } from './scripts/plugin-assets.ts';
 import { writeSpecPages } from './scripts/spec-pages.ts';
 
 // GitHub Pages serves the org's project site under the repo name. A custom domain changes the
@@ -45,6 +46,7 @@ export default defineConfig({
           // The preview serves the built site and reads none of the generated files.
           if (command === 'preview') return;
           writeSpecPages(import.meta.dirname);
+          copyPluginImage(import.meta.dirname);
           await writeClientSamples(import.meta.dirname);
           try {
             execFileSync(
