@@ -7,3 +7,6 @@
 [submodule "php"]
 	path = php
 	url = https://github.com/gatepost-dev/php
+[submodule "woocommerce"]
+	path = woocommerce
+	url = https://github.com/gatepost-dev/woocommerce

@@ -15,6 +15,7 @@ export default defineConfig(
       'spec/**',
       'js/**',
       'php/**',
+      'woocommerce/**',
       'test-results/**',
       'playwright-report/**',
     ],
