@@ -27,7 +27,7 @@ This repo holds the source of the site at <https://gatepost-dev.github.io/docs/>
 ## What the site holds
 
 - A [playground](https://gatepost-dev.github.io/docs/playground/) where you check a postcode in your browser.
-- Guides for the TypeScript core, the TypeScript client, the PHP package, the HTML field and the React field.
+- Guides for the TypeScript core, the TypeScript client, the PHP package, the HTML field, the React field and the WooCommerce plugin.
 - An API reference that the build writes from the TSDoc comments and the PHP doc comments.
 - The spec pages: the grammar, the client contract, the field and the glossary.
 - A [readiness tracker](https://gatepost-dev.github.io/docs/readiness/) of common tools that reject the new postcode.
@@ -44,7 +44,7 @@ pnpm sdk
 pnpm dev
 ```
 
-`pnpm sdk` builds the `js` and `php` submodules, because the site documents their source. `pnpm dev` serves the site at `http://localhost:4321/docs/`.
+`pnpm sdk` builds the `js` and `php` submodules, because the site documents their source. The `woocommerce` submodule needs no build. The site copies one screenshot from it. `pnpm dev` serves the site at `http://localhost:4321/docs/`.
 
 ## Add a page
 

@@ -5,6 +5,7 @@ import starlight from '@astrojs/starlight';
 import { defineConfig } from 'astro/config';
 import { createStarlightTypeDocPlugin } from 'starlight-typedoc';
 import { writeClientSamples } from './scripts/client-samples.ts';
+import { copyPluginImage } from './scripts/plugin-assets.ts';
 import { writeSpecPages } from './scripts/spec-pages.ts';
 
 // GitHub Pages serves the org's project site under the repo name. A custom domain changes the
@@ -26,6 +27,9 @@ function typeDocOf(name) {
     sidebar: { label: `@gatepost/${name}`, collapsed: true },
     typeDoc: {
       excludeInternal: true,
+      // The field element inherits every member of HTMLElement. Without this, its page lists them
+      // all, grows past 1 MB, and the accessibility check of that page runs out of time.
+      excludeExternals: true,
       readme: 'none',
       disableSources: true,
       entryFileName: 'index',
@@ -45,6 +49,7 @@ export default defineConfig({
           // The preview serves the built site and reads none of the generated files.
           if (command === 'preview') return;
           writeSpecPages(import.meta.dirname);
+          copyPluginImage(import.meta.dirname);
           await writeClientSamples(import.meta.dirname);
           try {
             execFileSync(
