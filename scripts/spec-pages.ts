@@ -26,6 +26,12 @@ const SOURCES = [
     description: "How every Gatepost client calls NIPOST's gateway: results, errors and retries.",
   },
   {
+    file: 'field.md',
+    slug: 'field',
+    title: 'Field',
+    description: 'How every Gatepost postcode field behaves: settings, events, states and privacy.',
+  },
+  {
     file: 'CONTEXT.md',
     slug: 'glossary',
     title: 'Glossary',

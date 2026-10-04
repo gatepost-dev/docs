@@ -28,7 +28,7 @@ describe('the release state', () => {
   });
 
   it('has guides with an install command, so the checks below cannot pass on no page', () => {
-    expect(INSTALL_PAGES.length).toBeGreaterThanOrEqual(3);
+    expect(INSTALL_PAGES.length).toBeGreaterThanOrEqual(5);
   });
 
   it.each(INSTALL_PAGES)('matches the install notice of %s', (page) => {

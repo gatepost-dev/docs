@@ -10,6 +10,8 @@ Each Gatepost tool follows the same spec, so each one reads a postcode in the sa
 | You want to                                              | Use                                                | Needs a key      |
 | -------------------------------------------------------- | -------------------------------------------------- | ---------------- |
 | Check the form of a postcode in TypeScript or JavaScript | [`@gatepost/core`](../guides/typescript/)          | no               |
+| Add a postcode field to an HTML form                     | [`@gatepost/field`](../guides/html/)               | only to confirm  |
+| Add a postcode field to a React form                     | [`@gatepost/react`](../guides/react/)              | only to confirm  |
 | Look up a postcode from a TypeScript server              | [`@gatepost/client`](../guides/typescript-client/) | yes              |
 | Check or look up a postcode in PHP                       | [`gatepost/postcode`](../guides/php/)              | only for lookups |
 

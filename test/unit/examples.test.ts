@@ -39,7 +39,7 @@ function readJson(path: string): unknown {
 
 // The packages that an install command on a page may name: the Gatepost packages, and the HTTP
 // client that the PHP package tests with.
-const PNPM_PACKAGES = ['core', 'client'].map(
+const PNPM_PACKAGES = ['core', 'client', 'field', 'react'].map(
   (name) => (readJson(`js/packages/${name}/package.json`) as { name: string }).name,
 );
 const PHP_MANIFEST = readJson('php/composer.json') as {
@@ -127,6 +127,10 @@ describe('problemsOf', () => {
     expect(problemsOf(block('ts', 'a; // 1\n'))).toEqual([]);
     expect(problemsOf(block('php', 'echo 1; // 1\n'))).toEqual([]);
     expect(problemsOf(block('sh', 'pnpm add x\n'))).toEqual([]);
+  });
+
+  it.each(['html', 'tsx', 'css'])('accepts a %s block, which a browser check runs', (language) => {
+    expect(problemsOf(block(language, 'x\n'))).toEqual([]);
   });
 
   it('fails a PHP line that shows a result with no output to compare', () => {
@@ -348,6 +352,31 @@ describe('every install command on a page', () => {
       true,
     );
   });
+});
+
+// The field and the React wrapper run in a browser, so the js repo runs their README examples in
+// its own CI. A page may show only those examples, word for word. The browser tests of this repo
+// also load each HTML example against the built element.
+const README_EXAMPLES = ['field', 'react'].flatMap((name) =>
+  examplesOf(name, readFileSync(join(ROOT, `js/packages/${name}/README.md`), 'utf8')),
+);
+
+describe('every HTML, TSX and CSS example on a page', () => {
+  it('exists for the field and for React, so the check below cannot pass on none', () => {
+    expect(inLanguage('html').length).toBeGreaterThan(0);
+    expect(inLanguage('tsx').length).toBeGreaterThan(0);
+    expect(inLanguage('css').length).toBeGreaterThan(0);
+  });
+
+  it.each([...inLanguage('html'), ...inLanguage('tsx'), ...inLanguage('css')])(
+    'is a README example that the CI of the js repo runs: %s',
+    (_, { language, source }) => {
+      const sources = README_EXAMPLES.filter((example) => example.language === language).map(
+        (example) => example.source,
+      );
+      expect(sources).toContain(source);
+    },
+  );
 });
 
 describe('every example on a page', () => {

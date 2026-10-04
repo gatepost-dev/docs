@@ -14,6 +14,8 @@ const base = '/docs';
 
 const [coreTypeDoc, coreTypeDocGroup] = createStarlightTypeDocPlugin();
 const [clientTypeDoc, clientTypeDocGroup] = createStarlightTypeDocPlugin();
+const [fieldTypeDoc, fieldTypeDocGroup] = createStarlightTypeDocPlugin();
+const [reactTypeDoc, reactTypeDocGroup] = createStarlightTypeDocPlugin();
 
 // The API pages of a package, generated from the TSDoc comments of its source.
 function typeDocOf(name) {
@@ -95,7 +97,12 @@ export default defineConfig({
       // A code block that scrolls sideways needs a focus stop for keyboard users. Wrapped lines
       // need none, and they fit a phone screen.
       expressiveCode: { defaultProps: { wrap: true } },
-      plugins: [coreTypeDoc(typeDocOf('core')), clientTypeDoc(typeDocOf('client'))],
+      plugins: [
+        coreTypeDoc(typeDocOf('core')),
+        clientTypeDoc(typeDocOf('client')),
+        fieldTypeDoc(typeDocOf('field')),
+        reactTypeDoc(typeDocOf('react')),
+      ],
       sidebar: [
         { label: 'Start', items: ['start', 'playground'] },
         { label: 'Guides', items: [{ autogenerate: { directory: 'guides' } }] },
@@ -105,6 +112,8 @@ export default defineConfig({
           items: [
             coreTypeDocGroup,
             clientTypeDocGroup,
+            fieldTypeDocGroup,
+            reactTypeDocGroup,
             {
               label: 'gatepost/postcode',
               collapsed: true,

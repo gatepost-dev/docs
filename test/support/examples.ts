@@ -289,7 +289,7 @@ export function problemsOf(example: Example): readonly string[] {
   if (!closed) problems.push('The fence has no closing fence.');
   if (attributes !== '')
     problems.push(`The fence has the text "${attributes}" after the language.`);
-  if (!['ts', 'php', 'sh'].includes(language)) {
+  if (!['ts', 'php', 'sh', 'html', 'tsx', 'css'].includes(language)) {
     problems.push(`No check runs a block in the language "${language}".`);
   }
   if (language === 'ts') {
