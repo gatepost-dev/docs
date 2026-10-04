@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 The Gatepost authors
 // SPDX-License-Identifier: Apache-2.0
 // Writes the spec pages of the site from the spec submodule, so that the site shows the grammar,
-// the client contract and the glossary that the SDKs implement, word for word.
+// the client contract, the field and the glossary that the SDKs implement, word for word.
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -24,6 +24,12 @@ const SOURCES = [
     slug: 'client',
     title: 'Client contract',
     description: "How every Gatepost client calls NIPOST's gateway: results, errors and retries.",
+  },
+  {
+    file: 'field.md',
+    slug: 'field',
+    title: 'Field',
+    description: 'How every Gatepost postcode field behaves: settings, events, states and privacy.',
   },
   {
     file: 'CONTEXT.md',

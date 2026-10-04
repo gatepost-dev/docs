@@ -39,7 +39,7 @@ function readJson(path: string): unknown {
 
 // The packages that an install command on a page may name: the Gatepost packages, and the HTTP
 // client that the PHP package tests with.
-const PNPM_PACKAGES = ['core', 'client'].map(
+const PNPM_PACKAGES = ['core', 'client', 'field', 'react'].map(
   (name) => (readJson(`js/packages/${name}/package.json`) as { name: string }).name,
 );
 const PHP_MANIFEST = readJson('php/composer.json') as {
@@ -127,6 +127,11 @@ describe('problemsOf', () => {
     expect(problemsOf(block('ts', 'a; // 1\n'))).toEqual([]);
     expect(problemsOf(block('php', 'echo 1; // 1\n'))).toEqual([]);
     expect(problemsOf(block('sh', 'pnpm add x\n'))).toEqual([]);
+  });
+
+  // The js repo runs these blocks in a browser. The README check below ties each page block to one.
+  it.each(['html', 'tsx', 'css'])('accepts a %s block, which the js repo runs', (language) => {
+    expect(problemsOf(block(language, 'x\n'))).toEqual([]);
   });
 
   it('fails a PHP line that shows a result with no output to compare', () => {
@@ -350,6 +355,92 @@ describe('every install command on a page', () => {
   });
 });
 
+// The field and the React wrapper run in a browser, so the js repo runs their README examples in
+// its own CI. A page may show only those examples, word for word. The browser tests of this repo
+// also load each HTML example against the built element.
+const README_EXAMPLES = ['field', 'react'].flatMap((name) =>
+  examplesOf(name, readFileSync(join(ROOT, `js/packages/${name}/README.md`), 'utf8')),
+);
+
+describe('every HTML, TSX and CSS example on a page', () => {
+  it('exists for the field and for React, so the check below cannot pass on none', () => {
+    expect(inLanguage('html').length).toBeGreaterThan(0);
+    expect(inLanguage('tsx').length).toBeGreaterThan(0);
+    expect(inLanguage('css').length).toBeGreaterThan(0);
+  });
+
+  it.each([...inLanguage('html'), ...inLanguage('tsx'), ...inLanguage('css')])(
+    'is a README example that the CI of the js repo runs: %s',
+    (_, { language, source }) => {
+      const sources = README_EXAMPLES.filter((example) => example.language === language).map(
+        (example) => example.source,
+      );
+      expect(sources).toContain(source);
+    },
+  );
+});
+
+// The rows of the first table in the lines, without its header and its divider.
+function rowsOf(lines: readonly string[]): readonly string[] {
+  const start = lines.findIndex((line) => line.startsWith('|'));
+  if (start < 0) return [];
+  const rest = lines.slice(start);
+  const end = rest.findIndex((line) => !line.startsWith('|'));
+  return (end < 0 ? rest : rest.slice(0, end)).slice(2);
+}
+
+// The names in a table of a guide. The first column of the table that follows the box with the
+// label holds them, each between backticks.
+function tableNames(page: string, label: string): readonly string[] {
+  const text = readFileSync(join(ROOT, `src/content/docs/guides/${page}.md`), 'utf8');
+  const after = text.split(`aria-label="Table: ${label}">`)[1];
+  if (after === undefined) throw new Error(`${page}.md has no table "${label}".`);
+  const rows = rowsOf(after.split('\n'));
+  return rows.flatMap((row) =>
+    Array.from((row.split('|')[1] ?? '').matchAll(/`([^`]+)`/g), ([, name]) => name ?? ''),
+  );
+}
+
+const SPEC_FIELD = readFileSync(join(ROOT, 'spec/field.md'), 'utf8');
+const sorted = (names: readonly string[]): readonly string[] => [...names].sort();
+
+describe('the names in the tables of the field guides', () => {
+  it('lists the attributes that spec/field.md names', () => {
+    const line = SPEC_FIELD.split('\n').find((text) => text.includes('in kebab-case:')) ?? '';
+    const spec = Array.from(
+      line
+        .split('kebab-case:')[1]
+        ?.split('. ')[0]
+        ?.matchAll(/`([^`]+)`/g) ?? [],
+      ([, n]) => n ?? '',
+    );
+    expect(spec.length).toBeGreaterThan(5);
+    expect(sorted(tableNames('html', 'Attributes of the field'))).toEqual(sorted(spec));
+  });
+
+  it('lists the events that spec/field.md names, with the prefix of the web field', () => {
+    const rows = rowsOf((SPEC_FIELD.split('### Events\n')[1] ?? '').split('\n'));
+    const spec = rows.map(
+      (row) => `gatepost-${(row.split('|')[1] ?? '').replaceAll('`', '').trim()}`,
+    );
+    expect(spec).toHaveLength(3);
+    expect(sorted(tableNames('html', 'Events of the field'))).toEqual(sorted(spec));
+  });
+
+  it('lists the props of PostcodeFieldProps in the API report, and names each handler', () => {
+    const report = readFileSync(join(ROOT, 'js/packages/react/etc/react.api.md'), 'utf8');
+    const body = report.split('export interface PostcodeFieldProps {')[1]?.split('\n}')[0] ?? '';
+    const members = Array.from(body.matchAll(/^\s+readonly (\w+)\??:/gm), ([, name]) => name ?? '');
+    expect(members).toContain('apiKey');
+    const handlers = members.filter((name) => /^on[A-Z]/.test(name));
+    const guide = readFileSync(join(ROOT, 'src/content/docs/guides/react.md'), 'utf8');
+    expect(handlers.length).toBeGreaterThan(0);
+    for (const handler of handlers) expect(guide).toContain(`\`${handler}\``);
+    const props = members.filter((name) => !handlers.includes(name));
+    expect(sorted(tableNames('react', 'Props of PostcodeField'))).toEqual(sorted(props));
+  });
+});
+
 describe('every example on a page', () => {
   let mock: MockServer;
   let folder: string;
@@ -386,6 +477,44 @@ describe('every example on a page', () => {
     }
     expect(problems).toBe('');
   });
+
+  // The block imports the built package, so a renamed prop fails here, whatever the README says.
+  it(
+    'type-checks every TSX example against the built @gatepost/react',
+    { timeout: 120_000 },
+    async () => {
+      const react = join(ROOT, 'js/packages/react');
+      const types = join(react, 'node_modules/@types/react');
+      for (const [name, { source }] of inLanguage('tsx')) {
+        writeFileSync(join(folder, `${name.replace(/\W+/g, '-')}.tsx`), source);
+      }
+      writeFileSync(
+        join(folder, 'tsconfig.tsx.json'),
+        JSON.stringify({
+          extends: join(ROOT, 'tsconfig.json'),
+          compilerOptions: {
+            jsx: 'react-jsx',
+            lib: ['ES2022', 'DOM', 'DOM.Iterable'],
+            paths: {
+              '@gatepost/react': [join(react, 'dist/index.d.ts')],
+              react: [join(types, 'index.d.ts')],
+              'react/*': [join(types, '*')],
+            },
+          },
+          include: ['*.tsx'],
+        }),
+      );
+      const tsc = join(ROOT, 'node_modules/typescript/bin/tsc');
+      let problems = '';
+      try {
+        await run(process.execPath, [tsc, '--noEmit', '-p', join(folder, 'tsconfig.tsx.json')]);
+      } catch (error) {
+        problems =
+          error instanceof Error && 'stdout' in error ? String(error.stdout) : String(error);
+      }
+      expect(problems).toBe('');
+    },
+  );
 
   it.each(inLanguage('ts'))('runs and shows only true results: %s', async (name, { source }) => {
     const file = moduleOf(name);

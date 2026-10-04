@@ -12,7 +12,7 @@ function reported(name: string): readonly ReportedExport[] {
   return exportsOf(readFileSync(`js/packages/${name}/etc/${name}.api.md`, 'utf8'));
 }
 
-describe.each(['core', 'client'])('the API reference of @gatepost/%s', (name) => {
+describe.each(['core', 'client', 'field', 'react'])('the API reference of @gatepost/%s', (name) => {
   it('has a page for each symbol of the API report', () => {
     const missing = reported(name)
       .map(

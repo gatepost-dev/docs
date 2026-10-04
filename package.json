@@ -10,7 +10,7 @@
   "scripts": {
     "sdk": "run-s sdk:js sdk:js:build sdk:php",
     "sdk:js": "pnpm --dir js install --frozen-lockfile",
-    "sdk:js:build": "pnpm --dir js --filter @gatepost/core --filter @gatepost/client run build",
+    "sdk:js:build": "pnpm --dir js --filter './packages/{core,client,field,react}' run build",
     "sdk:php": "composer --working-dir=php install --no-interaction --no-progress",
     "dev": "ASTRO_TELEMETRY_DISABLED=1 astro dev",
     "build": "ASTRO_TELEMETRY_DISABLED=1 astro build",

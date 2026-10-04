@@ -10,8 +10,8 @@ const SPEC_VERSION = readFileSync('spec/VERSION', 'utf8').trim();
 const PAGES = specPages('spec', 'abc123');
 
 describe('specPages', () => {
-  it('builds the grammar, the client contract and the glossary', () => {
-    expect(PAGES.map(({ slug }) => slug)).toEqual(['grammar', 'client', 'glossary']);
+  it('builds the grammar, the client contract, the field and the glossary', () => {
+    expect(PAGES.map(({ slug }) => slug)).toEqual(['grammar', 'client', 'field', 'glossary']);
   });
 
   it('gives each page a title and drops the first heading of its file', () => {
