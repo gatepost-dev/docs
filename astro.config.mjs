@@ -27,6 +27,9 @@ function typeDocOf(name) {
     sidebar: { label: `@gatepost/${name}`, collapsed: true },
     typeDoc: {
       excludeInternal: true,
+      // The field element inherits every member of HTMLElement. Without this, its page lists them
+      // all, grows past 1 MB, and the accessibility check of that page runs out of time.
+      excludeExternals: true,
       readme: 'none',
       disableSources: true,
       entryFileName: 'index',
