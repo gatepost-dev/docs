@@ -29,11 +29,11 @@ Install and activate WooCommerce first. Then, in WordPress, go to Plugins > Add 
 
 ## Choose the settings
 
-The settings are under WooCommerce > Settings > Advanced > Nigerian postcodes. The name of the section is `gatepost_postcode`. A store owner never types an option name. The names help a developer find each setting in the code.
+The settings are under WooCommerce > Settings > Advanced > Nigerian postcodes. The name of the section is `gatepost_postcode`. A store owner never types a name from the table. The names help a developer find each setting in the code. All are option names, except `gatepost_wc_remove_key`. It is a field of the form, and WooCommerce does not save it.
 
 <div class="table-scroll" role="region" tabindex="0" aria-label="Table: Settings">
 
-| Setting               | Option                   | Values                                                                                  | Default  |
+| Setting               | Name                     | Values                                                                                  | Default  |
 | --------------------- | ------------------------ | --------------------------------------------------------------------------------------- | -------- |
 | Live secret key       | `gatepost_wc_secret_key` | A key that starts with `nipost_live_`                                                   | empty    |
 | Remove the key        | `gatepost_wc_remove_key` | A box that removes the saved key. It shows only when a key is saved.                    | off      |
@@ -66,8 +66,8 @@ A payment retry reuses the order. The order remembers the answer for each addres
 NIPOST receives these items:
 
 - The postcode in its standard form.
-- Your secret key.
-- The address of your shop server.
+- Your secret key, in the `X-API-Key` header.
+- The IP address of your shop server. NIPOST sees it with each request.
 
 The plugin sends no name, email address or other part of the address. It never sends an old 6-digit postcode. Read NIPOST's [terms of use](https://postcode.gov.ng/terms), [acceptable use policy](https://postcode.gov.ng/acceptable-use) and [privacy policy](https://postcode.gov.ng/privacy) before you enter a key.
 
@@ -102,5 +102,5 @@ The plugin answers the export and erase tools of WordPress. The export holds the
 
 ## Next steps
 
-- [Read the readme of the plugin](https://github.com/gatepost-dev/woocommerce#readme) for the full text of what it sends to NIPOST.
+- [Read the "External services" section of the plugin's `readme.txt`](https://github.com/gatepost-dev/woocommerce/blob/main/readme.txt) for the full text of what it sends to NIPOST.
 - [Read the postcode grammar](../../spec/grammar/) that the format check follows.

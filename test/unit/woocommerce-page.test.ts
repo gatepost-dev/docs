@@ -21,6 +21,9 @@ const PHP_FILES = execFileSync('git', ['-C', 'woocommerce', 'ls-files', 'src', '
 const SOURCE = PHP_FILES.map(plugin).join('\n');
 const README_TXT = plugin('readme.txt');
 const README_MD = plugin('README.md');
+const PLUGIN_STATE = (
+  JSON.parse(readFileSync('src/release-state.json', 'utf8')) as { plugin: string }
+).plugin;
 
 const NAMES = Array.from(PAGE.matchAll(/`(_?gatepost_[a-z_]+)`/g), ([, name]) => name ?? '');
 const SETTINGS = [
@@ -97,7 +100,38 @@ describe('the WooCommerce page', () => {
   it('says that the plugin has no release, in step with the readme of the plugin', () => {
     expect(README_MD).toContain('The plugin has no release yet');
     expect(README_TXT).toContain('This plugin is not on WordPress.org yet.');
-    expect(PAGE).toContain('not on WordPress.org');
+  });
+
+  // The page holds the claims of an unpublished plugin until the release flag changes.
+  it.each(['not on WordPress.org', 'It has no release', 'no zip file to download'])(
+    'holds the claim "%s" only while the plugin is not published',
+    (claim) => {
+      expect(PAGE.includes(claim)).toBe(PLUGIN_STATE === 'not published');
+    },
+  );
+
+  it('says what NIPOST receives, in the words of the readme of the plugin', () => {
+    expect(README_TXT).toContain("NIPOST also sees the IP address of the store's server");
+    expect(README_TXT).toContain("the store's secret key in the X-API-Key header");
+    expect(README_TXT).toContain('The plugin sends no name, email address or other part of the');
+    expect(README_TXT).toContain('It never sends an old 6-digit postcode.');
+    expect(PAGE).toContain('The IP address of your shop server. NIPOST sees it with each request.');
+    expect(PAGE).toContain('in the `X-API-Key` header');
+    expect(PAGE).toContain('The plugin sends no name, email address or other part of the address.');
+    expect(PAGE).toContain('It never sends an old 6-digit postcode.');
+    // The shop address, the domain and the URL are not what NIPOST sees.
+    expect(PAGE).not.toMatch(/\b(?<!IP )address of your (shop|store)\b/i);
+  });
+
+  it('links the readme.txt that holds the external services text', () => {
+    expect(README_TXT).toContain('== External services ==');
+    expect(PAGE).toContain('woocommerce/blob/main/readme.txt');
+    expect(PAGE).toContain('"External services"');
+  });
+
+  it('says that the remove box is a field and not a saved option', () => {
+    expect(plugin('src/SettingsPage.php')).toContain('The box itself is not saved.');
+    expect(PAGE).toContain('except `gatepost_wc_remove_key`');
   });
 
   it('shows the build commands that the readme of the plugin shows', () => {
