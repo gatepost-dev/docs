@@ -27,9 +27,9 @@ This repo holds the source of the site at <https://gatepost-dev.github.io/docs/>
 ## What the site holds
 
 - A [playground](https://gatepost-dev.github.io/docs/playground/) where you check a postcode in your browser.
-- Guides for the TypeScript core, the TypeScript client and the PHP package.
+- Guides for the TypeScript core, the TypeScript client, the PHP package, the HTML field and the React field.
 - An API reference that the build writes from the TSDoc comments and the PHP doc comments.
-- The spec pages: the grammar, the client contract and the glossary.
+- The spec pages: the grammar, the client contract, the field and the glossary.
 - A [readiness tracker](https://gatepost-dev.github.io/docs/readiness/) of common tools that reject the new postcode.
 
 ## Run it on your computer

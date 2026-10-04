@@ -16,7 +16,7 @@ The first alpha is not published yet. This page will say when it is.
 pnpm add @gatepost/field
 ```
 
-Until the release, the CDN address in the examples below does not work. Import `@gatepost/field` once in your app, and the page can use the element. A page with no build step can load the one-file build from a CDN instead. After a release exists, pin its version in the CDN address of a production page.
+Import `@gatepost/field` once in your app, and the page can use the element. A page with no build step can load the one-file build from a CDN instead, as the examples below do. Pin a version in the CDN address of a production page.
 
 ## Add the field
 
@@ -63,7 +63,7 @@ A key holds a lookup level, and a call above it fails. The field then says that 
 
 </div>
 
-With `gps`, a button puts the postcode of the user's location in the input. The field asks for the location only when the user presses the button. With `legacy="accept"`, the field also accepts an old 6-digit postcode.
+With `gps` and a key that the field accepts, a button puts the postcode of the user's location in the input. The field asks for the location only when the user presses the button. A location that is not precise enough gives a partial postcode, and the user types the rest. With `legacy="accept"`, the field also accepts an old 6-digit postcode.
 
 ## Listen for changes
 
