@@ -20,8 +20,6 @@ Each example below checks the format. It accepts spaces, hyphens and any letter 
 pnpm add @gatepost/core
 ```
 
-The first alpha is not published yet. This page will say when it is.
-
 ```ts
 import { parse } from '@gatepost/core';
 
