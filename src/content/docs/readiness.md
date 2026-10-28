@@ -1,6 +1,8 @@
 ---
-title: Readiness tracker
-description: Common tools that reject or hide Nigeria's new postcode, and the state of the fix for each one.
+title: Readiness tracker for Nigeria's new postcode
+description: Common tools, such as Shopify worldwide and WooCommerce, that reject or hide Nigeria's new postcode, and the state of the fix for each one.
+sidebar:
+  label: Readiness tracker
 ---
 
 On 1 October 2026, NIPOST launched a postcode of 11 letters and digits, as [its docs](https://docs.postcode.gov.ng) describe. Some common tools still accept only the old 6-digit postcode, or hide the postcode field for Nigeria. Gatepost has sent a fix to three of the five tools below and has not sent a fix to the other two. This page shows the state on 3 October 2026.

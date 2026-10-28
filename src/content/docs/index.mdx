@@ -1,6 +1,39 @@
 ---
-title: Tools for Nigeria's digital postcode
-description: Unofficial, open-source developer tools for Nigeria's digital postcode.
+title: Tools for Nigeria's NIPOST digital postcode
+description: Unofficial open-source tools that check, format and look up Nigeria's NIPOST digital postcode in TypeScript, PHP, HTML forms and WooCommerce.
+head:
+  - tag: meta
+    attrs:
+      property: og:type
+      content: website
+  # Search engines read this data to name the site and its software. It loads nothing.
+  - tag: script
+    attrs:
+      type: application/ld+json
+    content: |
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "https://gatepost-dev.github.io/docs/#website",
+            "name": "Gatepost",
+            "url": "https://gatepost-dev.github.io/docs/",
+            "description": "Unofficial open-source developer tools for Nigeria's digital postcode.",
+            "inLanguage": "en-GB"
+          },
+          {
+            "@type": "SoftwareSourceCode",
+            "@id": "https://gatepost-dev.github.io/docs/#software",
+            "name": "Gatepost",
+            "description": "Open-source tools that check, format and look up Nigeria's NIPOST digital postcode. Unofficial. Not made or endorsed by NIPOST.",
+            "url": "https://gatepost-dev.github.io/docs/",
+            "codeRepository": "https://github.com/gatepost-dev",
+            "programmingLanguage": ["TypeScript", "PHP"],
+            "license": "https://www.apache.org/licenses/LICENSE-2.0"
+          }
+        ]
+      }
 template: splash
 hero:
   title: Gatepost
@@ -14,7 +47,7 @@ hero:
       variant: minimal
 ---
 
-On 1 October 2026, NIPOST launched a digital postcode for addressable buildings and locations in Nigeria. A postcode such as `EK-01-A03-FK-01` has five segments. From large to small, they are the state, the LGA, the district, the area and the unit. The unit is one building.
+On 1 October 2026, NIPOST launched a digital postcode for addressable buildings and locations in Nigeria. A postcode such as `EK-01-A03-FK-01` has five segments. From large to small, they are the state, the LGA, the district, the area and the unit. The unit is one building. The [postcode format](postcode-format/) page explains each segment, and the [state codes](spec/state-codes/) page lists each state.
 
 Gatepost helps apps, websites and online stores accept these postcodes.
 
@@ -24,7 +57,7 @@ Gatepost helps apps, websites and online stores accept these postcodes.
 - Recognise an old 6-digit postcode.
 - Ask NIPOST's gateway about a postcode with your own API key.
 
-Only NIPOST's gateway can say whether a building has a given postcode. Gatepost checks the form first, so your app calls the gateway less often and with clean input.
+Only NIPOST's gateway can say whether a building has a given postcode. Gatepost checks the form first, so your app calls the gateway less often and with clean input. [Validate a Nigerian postcode](validate-postcode/) shows the check in TypeScript, PHP and an HTML form.
 
 Gatepost is independent. NIPOST did not make it and does not support it. For a problem with NIPOST's own app, data or API, contact NIPOST through its official website.
 

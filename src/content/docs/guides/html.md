@@ -1,6 +1,6 @@
 ---
-title: Add a postcode field to a web form
-description: Use the gatepost-postcode-field element in any HTML form, with or without a framework.
+title: Add a Nigerian postcode field to an HTML form
+description: Add a Nigerian postcode field to any HTML form with the gatepost-postcode-field element. It checks the format while the user types.
 sidebar:
   label: HTML field
   order: 4

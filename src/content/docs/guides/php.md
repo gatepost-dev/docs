@@ -1,6 +1,6 @@
 ---
-title: Check and look up postcodes in PHP
-description: Read Nigeria's digital postcodes offline and query NIPOST's gateway with gatepost/postcode.
+title: Validate and look up Nigerian postcodes in PHP
+description: Validate Nigeria's digital postcodes offline, and call the NIPOST postcode API, in PHP with the gatepost/postcode Composer package.
 sidebar:
   label: PHP
   order: 3

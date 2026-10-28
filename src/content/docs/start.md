@@ -1,6 +1,8 @@
 ---
-title: Choose a tool
-description: Find the Gatepost package that fits your app, and learn what each one needs.
+title: Choose a tool for Nigerian postcodes
+description: Find the Gatepost package that checks or looks up Nigerian postcodes in TypeScript, PHP, an HTML or React form, or a WooCommerce shop.
+sidebar:
+  label: Choose a tool
 ---
 
 Each Gatepost tool follows the same spec, so each one reads a postcode in the same way. Choose by the language of your app and by what it must know.
