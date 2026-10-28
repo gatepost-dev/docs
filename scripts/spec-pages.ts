@@ -1,7 +1,8 @@
 // SPDX-FileCopyrightText: 2026 The Gatepost authors
 // SPDX-License-Identifier: Apache-2.0
 // Writes the spec pages of the site from the spec submodule, so that the site shows the grammar,
-// the client contract, the field and the glossary that the SDKs implement, word for word.
+// the client contract, the field and the glossary that the SDKs implement, word for word. The page
+// of state codes comes from the data file that the SDKs read, so it cannot drift from them.
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -94,6 +95,59 @@ export function specPages(specDir: string, commit: string): readonly SpecPage[] 
   });
 }
 
+interface StateData {
+  readonly source: string;
+  readonly states: readonly {
+    readonly code: string;
+    readonly name: string;
+    readonly iso: string;
+  }[];
+}
+
+/**
+ * Builds the page that lists the state codes, from `data/states.json` of a spec folder. People
+ * search for these codes, so the page has a title and a description of its own.
+ *
+ * @param specDir - The spec folder, such as the `spec` submodule.
+ * @param commit - The commit of the spec folder, for the link to the data file.
+ * @returns The page, with its front matter.
+ */
+export function stateCodesPage(specDir: string, commit: string): SpecPage {
+  const version = readFileSync(join(specDir, 'VERSION'), 'utf8').trim();
+  const file = 'data/states.json';
+  const { source, states } = JSON.parse(readFileSync(join(specDir, file), 'utf8')) as StateData;
+  const url = `https://github.com/gatepost-dev/spec/blob/${commit}/${file}`;
+  const description =
+    `The ${String(states.length)} two-letter state codes that start a Nigerian postcode, ` +
+    'with the name and the ISO 3166-2:NG code of each state.';
+  const lines = [
+    '---',
+    'title: Nigerian state codes for postcodes',
+    `description: "${description}"`,
+    'editUrl: false',
+    `sidebar: { label: State codes, order: ${String(SOURCES.length + 1)} }`,
+    '---',
+    '',
+    `:::note\nThis page shows [\`${file}\`](${url}) from spec ${version}.\n:::`,
+    '',
+    'The first segment of a postcode is the state. It is a code of two letters.',
+    'The table lists the code of each state and of the Federal Capital Territory.',
+    '`parse` gives `unknown_state` for any other two letters.',
+    '',
+    '## Codes and names',
+    '',
+    '| Code | State | ISO 3166-2 |',
+    '|---|---|---|',
+    ...states.map(({ code, name, iso }) => `| \`${code}\` | ${name} | \`${iso}\` |`),
+    '',
+    '## Source',
+    '',
+    source,
+    '',
+  ];
+  return { slug: 'state-codes', text: wrapTables(lines.join('\n')) };
+}
+
 /**
  * Writes the spec pages into the docs collection. The build calls it before it reads the pages.
  *
@@ -104,7 +158,8 @@ export function writeSpecPages(root: string): void {
   const commit = execFileSync('git', ['-C', specDir, 'rev-parse', 'HEAD'], { encoding: 'utf8' });
   const folder = join(root, 'src/content/docs/spec');
   mkdirSync(folder, { recursive: true });
-  for (const { slug, text } of specPages(specDir, commit.trim())) {
+  const pages = [...specPages(specDir, commit.trim()), stateCodesPage(specDir, commit.trim())];
+  for (const { slug, text } of pages) {
     writeFileSync(join(folder, `${slug}.md`), text);
   }
 }

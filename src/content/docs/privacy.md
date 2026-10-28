@@ -1,6 +1,8 @@
 ---
-title: Privacy
-description: What this site keeps, what it sends and what GitHub logs.
+title: Privacy of the Gatepost docs
+description: This site has no analytics, no tracking and no cookies. Read what your browser keeps, what the site sends and what GitHub logs.
+sidebar:
+  label: Privacy
 ---
 
 This site has no analytics, no tracking and no cookies. Every script, font, image and style comes from this site itself. No page loads anything from another website.

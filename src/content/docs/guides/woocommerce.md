@@ -1,6 +1,6 @@
 ---
-title: Add the postcode to a WooCommerce checkout
-description: Install Gatepost Postcode for WooCommerce, and choose how it checks each postcode.
+title: Add the Nigerian postcode to a WooCommerce checkout
+description: Show the Nigerian postcode field in the WooCommerce checkout, and check each postcode. The plugin can ask NIPOST whether a postcode exists.
 sidebar:
   label: WooCommerce
   order: 6

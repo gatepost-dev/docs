@@ -1,6 +1,6 @@
 ---
-title: Add a postcode field to a React form
-description: Use the PostcodeField component of @gatepost/react in React 18 or 19, and in Next.js.
+title: Add a Nigerian postcode field to a React form
+description: Add a Nigerian postcode field to a React 18 or 19 form, or to Next.js, with the PostcodeField component of @gatepost/react.
 sidebar:
   label: React
   order: 5

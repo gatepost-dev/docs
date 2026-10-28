@@ -4,10 +4,15 @@ import { readFileSync } from 'node:fs';
 import { SPEC_VERSION as CLIENT_SPEC_VERSION } from '@gatepost/client';
 import { SPEC_VERSION as CORE_SPEC_VERSION } from '@gatepost/core';
 import { describe, expect, it } from 'vitest';
-import { specPages, wrapTables } from '../../scripts/spec-pages.ts';
+import { checkProse } from '../../scripts/check-prose.ts';
+import { specPages, stateCodesPage, wrapTables } from '../../scripts/spec-pages.ts';
 
 const SPEC_VERSION = readFileSync('spec/VERSION', 'utf8').trim();
 const PAGES = specPages('spec', 'abc123');
+const STATE_DATA = JSON.parse(readFileSync('spec/data/states.json', 'utf8')) as {
+  source: string;
+  states: readonly unknown[];
+};
 
 describe('specPages', () => {
   it('builds the grammar, the client contract, the field and the glossary', () => {
@@ -25,6 +30,40 @@ describe('specPages', () => {
     expect(PAGES[1]?.text).toContain(
       `[\`client.md\`](https://github.com/gatepost-dev/spec/blob/abc123/client.md) from spec ${SPEC_VERSION}.`,
     );
+  });
+});
+
+describe('stateCodesPage', () => {
+  const { slug, text } = stateCodesPage('spec', 'abc123');
+  const rows = text.split('\n').filter((line) => /^\| `[A-Z]{2}` \|/.test(line));
+
+  it('builds the state codes page, with a title that names the subject', () => {
+    expect(slug).toBe('state-codes');
+    expect(text).toMatch(/^---\ntitle: Nigerian state codes for postcodes\n/);
+  });
+
+  it('gives one row to each state in data/states.json', () => {
+    expect(rows).toHaveLength(STATE_DATA.states.length);
+    expect(rows).toContain('| `FC` | Federal Capital Territory | `NG-FC` |');
+  });
+
+  it('shows the ISO code where NIPOST uses another code', () => {
+    expect(rows).toContain('| `BR` | Borno | `NG-BO` |');
+  });
+
+  it('quotes the source of the codes, and links the data file at its commit', () => {
+    expect(text).toContain(STATE_DATA.source);
+    expect(text).toContain(
+      `[\`data/states.json\`](https://github.com/gatepost-dev/spec/blob/abc123/data/states.json) from spec ${SPEC_VERSION}.`,
+    );
+  });
+
+  it('puts the table in a box with a focus stop', () => {
+    expect(text).toContain('<div class="table-scroll" role="region" tabindex="0"');
+  });
+
+  it('passes the prose check of the hand-written pages', () => {
+    expect(checkProse(text)).toEqual([]);
   });
 });
 

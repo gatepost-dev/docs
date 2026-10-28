@@ -1,6 +1,6 @@
 ---
-title: Check postcodes in TypeScript
-description: Read, clean and format Nigeria's digital postcodes with @gatepost/core, with no network call.
+title: Check Nigerian postcodes in TypeScript
+description: Parse and validate Nigeria's digital postcodes in TypeScript or JavaScript with @gatepost/core. It works offline and needs no API key.
 sidebar:
   label: TypeScript
   order: 1

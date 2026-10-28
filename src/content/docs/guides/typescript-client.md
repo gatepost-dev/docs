@@ -1,6 +1,6 @@
 ---
-title: Look up postcodes in TypeScript
-description: Ask NIPOST's gateway about a postcode, a place or a typed code with @gatepost/client.
+title: Use the NIPOST postcode API from TypeScript
+description: Look up a Nigerian postcode with NIPOST's API and @gatepost/client. Find the postcode of a place, and complete a postcode as the user types.
 sidebar:
   label: TypeScript client
   order: 2
