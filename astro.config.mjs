@@ -109,7 +109,7 @@ export default defineConfig({
         reactTypeDoc(typeDocOf('react')),
       ],
       sidebar: [
-        { label: 'Start', items: ['start', 'playground'] },
+        { label: 'Start', items: ['start', 'postcode-format', 'validate-postcode', 'playground'] },
         { label: 'Guides', items: [{ autogenerate: { directory: 'guides' } }] },
         { label: 'Spec', items: [{ autogenerate: { directory: 'spec' } }] },
         {
