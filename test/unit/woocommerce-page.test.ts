@@ -97,9 +97,15 @@ describe('the WooCommerce page', () => {
     expect(PAGE).toContain('`nipost_live_`');
   });
 
-  it('says that the plugin has no release, in step with the readme of the plugin', () => {
-    expect(README_MD).toContain('The plugin has no release yet');
+  it('links the release that the readme of the plugin links', () => {
+    const release = 'https://github.com/gatepost-dev/woocommerce/releases/tag/v0.1.0';
+    expect(README_MD).toContain(release);
+    expect(PAGE).toContain(release);
+  });
+
+  it('says that WordPress.org does not list the plugin yet, in step with the readme', () => {
     expect(README_TXT).toContain('This plugin is not on WordPress.org yet.');
+    expect(PAGE).toContain('the plugin directory does not list it yet');
   });
 
   // The page holds the claims of an unpublished plugin until the release flag changes.

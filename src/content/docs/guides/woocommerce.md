@@ -12,9 +12,13 @@ The field shows only when the address is in Nigeria. It works in the classic che
 
 ## Install
 
-The plugin is not published yet. It has no release, and it is not on WordPress.org. There is no zip file to download today.
+The first release is [v0.1.0 on GitHub](https://github.com/gatepost-dev/woocommerce/releases/tag/v0.1.0). WordPress.org reviews the plugin now, so the plugin directory does not list it yet.
 
-To try the plugin now, build the zip file from the source. You need Git, PHP 8.1 or later and Composer.
+Download `gatepost-postcode-for-woocommerce.zip` from the release. Do not use the source archive that GitHub offers. It does not hold the bundled SDK, so the plugin cannot start.
+
+Install and activate WooCommerce first. Then, in WordPress, go to Plugins > Add New Plugin > Upload Plugin, upload the zip file, and activate it.
+
+To build the zip file yourself, you need Git, PHP 8.1 or later and Composer.
 
 ```sh notrun
 git clone https://github.com/gatepost-dev/woocommerce
@@ -23,9 +27,7 @@ composer install
 scripts/build-zip
 ```
 
-The script writes `dist/gatepost-postcode-for-woocommerce.zip`. Do not use the source archive that GitHub offers. It does not hold the bundled SDK, so the plugin cannot start.
-
-Install and activate WooCommerce first. Then, in WordPress, go to Plugins > Add New Plugin > Upload Plugin, upload the zip file, and activate it.
+The script writes `dist/gatepost-postcode-for-woocommerce.zip`.
 
 ## Choose the settings
 
